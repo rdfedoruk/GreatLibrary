@@ -1,0 +1,38 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 24px;
+}
+
+.tagline {
+  color: var(--text, inherit);
+  opacity: 0.75;
+  margin-bottom: 12px;
+}
+
+.shell button {
+  font-size: 16px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--accent, inherit);
+  background: var(--accent-bg, transparent);
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+}
+
+.shell button:hover {
+  border-color: var(--accent-border, currentColor);
+}
+
+.account {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}

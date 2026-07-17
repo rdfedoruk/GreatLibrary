@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(supabase --version)",
+      "PowerShell(supabase projects list)",
+      "PowerShell(Move-Item handoff\\\\CLAUDE.md .\\\\CLAUDE.md)",
+      "PowerShell(Move-Item handoff\\\\docs .\\\\docs)",
+      "PowerShell(Remove-Item handoff -Recurse -Force -Confirm:$false)",
+      "PowerShell(git init)",
+      "Read(//c/Users/Admin/AppData/Local/Temp/claude/C--Users-Admin-Projects-GreatLibrary/a96bf9f3-3b45-4470-9ba9-2df9eb23e5e3/scratchpad/**)",
+      "Bash(npm create *)",
+      "Bash(npm run *)",
+      "Bash(curl -s \"https://vjwvswsuzhcqrkwpqodg.supabase.co/rest/v1/profiles?select=display_name,created_at\" -H \"apikey: sb_publishable_4rd_hEWMGjojjJyQ0UIvIw_PISklRlj\")",
+      "Bash(git add *)"
+    ]
+  }
+}
