@@ -38,7 +38,9 @@
       "Bash(git push *)",
       "Bash(npx tsc *)",
       "Bash(npx supabase *)",
-      "Bash(rm -f gen_err.txt)"
+      "Bash(rm -f gen_err.txt)",
+      "Bash(curl -s \"https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DBmLtPoeS3Dk&format=json\")",
+      "Bash(curl -s -D - -o /dev/null \"https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DBmLtPoeS3Dk&format=json\" -H \"Origin: https://greatlibrary.theduke.digital\")"
     ]
   }
 }

@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom'
 import { fetchOwnProfile, type Profile } from '../profiles'
 import {
   addIdentity,
+  attributeSubmission,
   fetchIdentities,
   fetchMyClaims,
+  findYoutubeMatches,
   removeIdentity,
   requestClaim,
   searchUnclaimedProfiles,
@@ -12,10 +14,78 @@ import {
   type IdentityConflict,
   type MyClaim,
   type UnclaimedProfile,
+  type YoutubeMatch,
 } from './api'
 import './claims.css'
 
 const PLATFORMS = ['youtube', 'linkedin', 'sn_community', 'podcast', 'website']
+
+function YoutubeMatchChecker({
+  profileId,
+  identityValue,
+}: {
+  profileId: string
+  identityValue: string
+}) {
+  const [matches, setMatches] = useState<YoutubeMatch[] | null>(null)
+  const [checking, setChecking] = useState(false)
+  const [attributed, setAttributed] = useState<Set<string>>(new Set())
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleCheck() {
+    setChecking(true)
+    setError(null)
+    try {
+      const found = await findYoutubeMatches(profileId, identityValue)
+      setMatches(found)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  async function handleAttribute(submissionId: string) {
+    try {
+      await attributeSubmission(submissionId, profileId)
+      setAttributed((s) => new Set(s).add(submissionId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  return (
+    <div className="match-checker">
+      <button type="button" onClick={() => void handleCheck()} disabled={checking}>
+        {checking ? 'Checking…' : 'Check for matching videos'}
+      </button>
+      {error && <p className="claim-error">{error}</p>}
+      {matches && matches.length === 0 && (
+        <p className="claim-hint">No unattributed videos found from this channel.</p>
+      )}
+      {matches && matches.length > 0 && (
+        <ul className="match-results">
+          {matches.map((m) => (
+            <li key={m.submissionId}>
+              <a href={m.url} target="_blank" rel="noopener noreferrer">
+                {m.description}
+              </a>
+              {attributed.has(m.submissionId) ? (
+                <span className="claim-status claim-status-approved">
+                  attributed
+                </span>
+              ) : (
+                <button type="button" onClick={() => void handleAttribute(m.submissionId)}>
+                  Attribute to me
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 function IdentitySection({
   profile,
@@ -90,17 +160,25 @@ function IdentitySection({
         <ul className="identity-list">
           {identities.map((id) => (
             <li key={id.id}>
-              <span className="identity-platform">{id.platform}</span>
-              <span className="identity-value">{id.identity_value}</span>
-              <button
-                type="button"
-                className="identity-remove"
-                onClick={() =>
-                  removeIdentity(id.id).then(reload).catch(() => reload())
-                }
-              >
-                ×
-              </button>
+              <div className="identity-row">
+                <span className="identity-platform">{id.platform}</span>
+                <span className="identity-value">{id.identity_value}</span>
+                <button
+                  type="button"
+                  className="identity-remove"
+                  onClick={() =>
+                    removeIdentity(id.id).then(reload).catch(() => reload())
+                  }
+                >
+                  ×
+                </button>
+              </div>
+              {id.platform === 'youtube' && (
+                <YoutubeMatchChecker
+                  profileId={profile.id}
+                  identityValue={id.identity_value}
+                />
+              )}
             </li>
           ))}
         </ul>

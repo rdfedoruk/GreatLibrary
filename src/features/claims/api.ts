@@ -115,6 +115,74 @@ export async function requestClaim(
   }
 }
 
+export interface YoutubeMatch {
+  submissionId: string
+  description: string
+  url: string
+}
+
+function normalizeUrl(url: string): string {
+  return url
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/$/, '')
+}
+
+// Finds already-submitted YouTube videos whose channel matches the given
+// identity, that aren't already attributed to this profile. Calls
+// YouTube's public oEmbed endpoint directly from the browser — it sends
+// permissive CORS headers, so no server-side function is needed. Scoped to
+// YouTube only: it's the one platform with a free, keyless way to resolve
+// a video URL back to its channel.
+export async function findYoutubeMatches(
+  profileId: string,
+  channelIdentityValue: string,
+): Promise<YoutubeMatch[]> {
+  const target = normalizeUrl(channelIdentityValue)
+
+  const { data: submissions, error } = await supabase
+    .from('submissions')
+    .select('id, url, description, submission_attributions ( profile_id )')
+    .eq('source_site', 'youtube')
+
+  if (error) throw error
+
+  const unattributed = submissions.filter(
+    (s) => !s.submission_attributions.some((a) => a.profile_id === profileId),
+  )
+
+  const results = await Promise.all(
+    unattributed.map(async (s): Promise<YoutubeMatch | null> => {
+      try {
+        const res = await fetch(
+          `https://www.youtube.com/oembed?url=${encodeURIComponent(s.url)}&format=json`,
+        )
+        if (!res.ok) return null
+        const json = (await res.json()) as { author_url?: string }
+        if (!json.author_url) return null
+        if (normalizeUrl(json.author_url) !== target) return null
+        return { submissionId: s.id, description: s.description, url: s.url }
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  return results.filter((r): r is YoutubeMatch => r !== null)
+}
+
+export async function attributeSubmission(
+  submissionId: string,
+  profileId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('submission_attributions')
+    .insert({ submission_id: submissionId, profile_id: profileId })
+  if (error) throw new Error(error.message)
+}
+
 export async function fetchMyClaims(userId: string): Promise<MyClaim[]> {
   const { data, error } = await supabase
     .from('claims')
