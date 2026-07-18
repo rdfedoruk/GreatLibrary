@@ -62,10 +62,23 @@ checking in first.
 > names through that mapping. Migration applied 2026-07-18
 > (`20260718000003_unified_profiles.sql`) — the live schema has the new shape.
 
-- **Content claiming** — designed, not built (Phase 4). Matched by platform
-  identity keys via `creator_identities` (channel ID, profile URL — never
-  display name), claim requests go through the moderation queue for manual
-  approval. Full flow in `decisions-log.md` § Content Creators & Claiming.
+- **Content claiming** — BUILT (2026-07-18), not yet live-tested with a real
+  signed-in session (Claude Code can't complete Google OAuth). `/claim` page
+  in `src/features/claims/`: add/remove your own `profile_identities`,
+  search unclaimed profiles and request a claim, see your own claims'
+  status. Matching works by leaning on the existing global unique
+  `(platform, identity_value)` constraint — adding an identity that's
+  already attached elsewhere surfaces a conflict with a one-click claim
+  button if that profile is unclaimed. **Approval is manual SQL only** — no
+  admin UI, per the "avoid the admin rabbit hole" decision below. Full flow
+  in `decisions-log.md` § Content Creators & Claiming.
+  - **Verification owed:** seed a throwaway unclaimed profile + identity and
+    confirm the match-suggestion banner and claim request round-trip live.
+    Andrew deferred this ("later").
+  - **Admin role decision (2026-07-18):** no role table, no permission
+    levels — hardcoded to being solo-run. Claim/removal approval happens by
+    Andrew editing `claims.status` / `profiles.linked_user_id` directly via
+    SQL. Revisit only when a second admin actually exists.
 - **Multi-platform creators** — DECIDED 2026-07-18: one creator can hold
   identities across any number of platforms (YouTube + SN Community +
   podcast, etc.) via `creator_identities`, replacing the old fixed-column

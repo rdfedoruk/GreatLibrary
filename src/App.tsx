@@ -4,6 +4,7 @@ import './App.css'
 import { signInWithEmail, signInWithGoogle, signOut, useSession } from './lib/auth'
 import { SubmissionList, SubmitForm } from './features/submissions'
 import { ProfilePage } from './features/profiles'
+import { ClaimPage } from './features/claims'
 
 function EmailSignIn() {
   const [email, setEmail] = useState('')
@@ -80,6 +81,9 @@ function App() {
               <span className="account-name">
                 {session.user.user_metadata.full_name ?? session.user.email}
               </span>
+              <Link className="claim-nav-link" to="/claim">
+                Claim your page
+              </Link>
               <button type="button" onClick={() => void signOut()}>
                 Sign out
               </button>
@@ -110,6 +114,10 @@ function App() {
         <Route
           path="/profile/:slug"
           element={<ProfilePage currentUserId={session?.user.id ?? null} />}
+        />
+        <Route
+          path="/claim"
+          element={<ClaimPage userId={session?.user.id ?? null} />}
         />
       </Routes>
     </main>

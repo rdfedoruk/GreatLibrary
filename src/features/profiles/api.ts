@@ -44,3 +44,24 @@ export async function fetchProfileBySlug(slug: string): Promise<Profile | null> 
     created_at: row.created_at,
   }
 }
+
+// The profile a signed-in user's login is attached to. Always exists once
+// signed in — the signup trigger creates a born-claimed profile for every
+// new auth user.
+export async function fetchOwnProfile(userId: string): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, display_name, slug, type, linked_user_id, created_at')
+    .eq('linked_user_id', userId)
+    .single()
+
+  if (error) throw error
+  return {
+    id: data.id,
+    display_name: data.display_name,
+    slug: data.slug,
+    type: data.type,
+    claimed: true,
+    created_at: data.created_at,
+  }
+}

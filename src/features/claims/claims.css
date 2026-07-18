@@ -1,0 +1,137 @@
+.claim-page {
+  padding: 1rem 0 3rem;
+}
+
+.claim-section {
+  margin: 1.5rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.claim-section h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.claim-hint {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  margin: 0 0 0.75rem;
+}
+
+.identity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.identity-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.identity-platform {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.identity-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.6;
+  font-size: 1rem;
+  padding: 0 0.3rem;
+}
+
+.identity-remove:hover {
+  opacity: 1;
+}
+
+.identity-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.identity-form input,
+.identity-form select {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+}
+
+.claim-error {
+  color: #d33;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.claim-suggestion {
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--accent-bg, rgba(120, 120, 40, 0.08));
+  border-radius: 6px;
+}
+
+.claim-search-input {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  width: 100%;
+  max-width: 20rem;
+}
+
+.claim-results {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.claim-results li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.claim-status {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: #e8e2d4;
+  color: #6b6455;
+}
+
+.claim-status-approved {
+  background: #d9ead3;
+  color: #38761d;
+}
+
+.claim-status-rejected {
+  background: #f4cccc;
+  color: #a61c00;
+}
+
+.claim-status-msg {
+  padding: 2rem 0;
+  opacity: 0.8;
+}
