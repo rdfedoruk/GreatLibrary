@@ -8,4 +8,4 @@ Unresolved design decisions. If a task depends on one of these, stop and ask rat
 - **Additional per-site handlers** — beyond LinkedIn/YouTube/Community (e.g. X/Twitter, Reddit, generic blogs). Not scoped.
 - **Creator verification strength** — v1 is manual review via the moderation queue. Stronger automated verification (e.g. OAuth into YouTube Data API to confirm channel ownership) is a possible v2 if manual review doesn't scale.
 - **Google sign-in shows the raw Supabase URL** ("continue to vjwvswsuzhcqrkwpqodg.supabase.co") — cosmetic but unprofessional for launch. Fix requires a real domain plus Supabase's custom domain add-on (paid). Revisit when the app gets a public domain.
-- **Nice-to-have features** — not yet captured in these docs at all.
+- **Nice-to-have features** — tracked in `todo.md`, not here (this file is for decisions blocking in-progress work).

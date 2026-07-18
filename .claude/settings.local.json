@@ -11,7 +11,27 @@
       "Bash(npm create *)",
       "Bash(npm run *)",
       "Bash(curl -s \"https://vjwvswsuzhcqrkwpqodg.supabase.co/rest/v1/profiles?select=display_name,created_at\" -H \"apikey: sb_publishable_4rd_hEWMGjojjJyQ0UIvIw_PISklRlj\")",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git reset *)",
+      "Bash(git commit -q -m ' *)",
+      "Bash(gh auth *)",
+      "PowerShell(winget install --id GitHub.cli -e --accept-source-agreements --accept-package-agreements)",
+      "PowerShell(git -C C:\\\\Users\\\\Admin\\\\Projects\\\\GreatLibrary log --oneline -5)",
+      "PowerShell(git -C C:\\\\Users\\\\Admin\\\\Projects\\\\GreatLibrary status --short)",
+      "PowerShell(git -C C:\\\\Users\\\\Admin\\\\Projects\\\\GreatLibrary diff docs/open-questions.md)",
+      "PowerShell(supabase migration list --linked 2>$null)",
+      "PowerShell(npx supabase migration list --linked)",
+      "PowerShell(npx supabase db --help)",
+      "PowerShell(npx supabase db query \"select id, display_name from public.profiles limit 3\" --linked --output json)",
+      "PowerShell(npx supabase db query \"with s as \\(insert into public.submissions \\(url, description, source_site, submitted_by\\) values \\('https://example.com/test-great-library-render-check', 'TEMP TEST ROW - verifying list rendering, will be deleted', 'youtube', '54aa5539-86cb-46b4-8b87-f233424fbfc8'\\) returning id\\), t as \\(insert into public.submission_tags \\(submission_id, tag_id\\) select s.id, tags.id from s, public.tags where \\(dimension='medium' and name='Video'\\) or \\(dimension='module' and name in \\('Flow Designer','Flow Action'\\)\\) returning submission_id\\) insert into public.votes \\(submission_id, user_id, value\\) select id, '54aa5539-86cb-46b4-8b87-f233424fbfc8', 1 from s returning submission_id\" --linked --output json)",
+      "PowerShell(npx supabase db query \"delete from public.submissions where id = '30fceeb7-7a8b-48e9-b831-afc001e445c7' returning id\" --linked --output json)",
+      "PowerShell(git add src vite.config.ts .claude/launch.json docs/open-questions.md)",
+      "PowerShell(git add src docs/submission-todo.md)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri http://localhost:5173 -UseBasicParsing -TimeoutSec 5; $r.StatusCode } catch { \"not running\" })",
+      "PowerShell(git add src/features/tags docs/submission-todo.md)",
+      "PowerShell(git add src)",
+      "Bash(git mv *)",
+      "WebSearch"
     ]
   }
 }

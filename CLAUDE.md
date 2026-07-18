@@ -7,7 +7,7 @@ Built solo. Optimize for low maintenance burden over feature completeness. When 
 ## Tech Stack
 
 - **Backend/Auth/DB:** Supabase (Postgres + Auth combined)
-- **Auth:** Google OAuth only for v1 — no email/password. See `docs/data-model.md` for reasoning.
+- **Auth:** Google OAuth **plus** dedicated email sign-in (magic-link/OTP, no password) — revised 2026-07-18 after user feedback; Google-only did not survive contact with the target audience. Password-based sign-in may be added later as an additive third option, not a redesign. See `docs/decisions-log.md` § Auth / Account Model.
 - **Browser plugin:** Chrome Manifest V3, per-site content scripts. See `docs/browser-plugin-spec.md`.
 - **Testing:** Playwright (official Claude Code plugin) for browser/plugin flows; standard test runner for backend logic — confirm framework choice at Phase 1 setup if not already decided.
 

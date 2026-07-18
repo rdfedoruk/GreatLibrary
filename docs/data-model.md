@@ -9,19 +9,37 @@ Created via Supabase Auth (Google OAuth only for v1). No password fields, no ema
 
 ### submissions
 - `submitted_by` → `users.id` — fixed at submission time, never reassigned.
-- `content_creator_id` → `content_creators.id` (nullable until matched)
 - `url` — the resolved, canonical URL (see browser-plugin-spec.md for per-site resolution rules)
 - `description` — short, user-provided or auto-suggested (never full scraped content)
 - `source_site` — which handler produced this (linkedin / youtube / sn_community / manual / generic)
 - Tags — many-to-many via a join table against the tag taxonomy (see Tagging Taxonomy below)
+- Creators — many-to-many via `submission_creators` (see below), not a single FK.
 
 ### content_creators
-Separate from `users` — represents whoever actually made the content, independent of whether they're a platform member yet.
+Separate from `users` — represents whoever actually made the content, independent of whether they're a platform member yet. Can be a **person** (Robert Fedoruk) or an **entity** (ServiceNow, NowBen, CJ&TheDuke) — same table, same relationships, same claim mechanics; entities are just far less likely to ever actually get claimed.
 
 - `id`
 - `display_name`
-- `linked_user_id` → `users.id`, nullable, set on successful claim
-- Identity signals for matching (not just free-text name): `youtube_channel_id`, `linkedin_profile_url`, `sn_community_username`. These are the matching keys — display names collide and change, so don't match on name alone.
+- `type` — enum: `person` / `entity`. Drives UI treatment (entity chips render distinctly from person chips) — not a behavioral fork in the schema itself.
+- `linked_user_id` → `users.id`, nullable, set on successful claim. Same claim flow regardless of type.
+
+**Revised (2026-07-18):** three fixed identity columns (`youtube_channel_id`, `linkedin_profile_url`, `sn_community_username`) didn't scale — every new platform meant another migration, and couldn't represent one creator with, say, a YouTube channel *and* a podcast *and* a Community handle. Replaced with a child table:
+
+### creator_identities
+- `id`
+- `content_creator_id` → `content_creators.id`
+- `platform` — youtube / linkedin / sn_community / podcast / website / etc. Open-ended — add values as new platforms come up, no schema change needed to add another identity of an existing platform type.
+- `identity_value` — the channel ID / profile URL / username / domain. This is the matching key — never match on `display_name` alone (collides, changes).
+
+One creator can hold any number of identities across any number of platforms.
+
+### submission_creators
+Who actually made a submission's content — many-to-many, since content can have co-creators (a podcast's co-hosts) or multiple attributed parties (a publisher entity *and* the person featured in it, e.g. a ServiceNow-published video featuring Robert Fedoruk).
+
+- `submission_id` → `submissions.id`
+- `content_creator_id` → `content_creators.id`
+
+**No role field** (author / publisher / featured, etc. — considered, dropped: see removal_requests below for why it turned out unnecessary). Attribution here works like tagging: the submitter picks whichever creators they recognize, can miss someone (a co-host who doesn't get credited at first), and it's correctable later — unlike `submitted_by`, which is permanently fixed at submission time.
 
 ### claims
 Tracks a user's request to link themselves to a `content_creators` record.
@@ -40,13 +58,18 @@ Tracks a user's request to link themselves to a `content_creators` record.
 - Critiques may eventually carry structured sub-tags (accuracy, outdated, wrong version) rather than just freeform text — not required for v1, worth leaving room for.
 
 ### removal_requests
-Distinct from a normal critique/moderation flag. A **verified creator** (one with `linked_user_id` set) can request removal of content attributed to them. This carries more procedural weight than an ordinary community flag and should be visually/procedurally distinguished in the moderation queue rather than mixed in with routine flags.
+**Revised (2026-07-18):** two separate mechanisms, replacing the earlier "must be linked/verified to file one" rule — a single mechanism couldn't cover both a verified individual and an unclaimable entity like ServiceNow.
+
+1. **Verified self-removal.** A creator with `linked_user_id` set (a real, claimed person) can pull content attributed to them directly. No moderation queue for this action — identity was already checked once, at claim time; re-checking it on every removal would just re-litigate a settled fact. This is also why `submission_creators` doesn't need a role field: any linked person can remove their own attributed content regardless of whether they were the "author," a "co-host," or just "featured."
+2. **Open takedown request.** Anyone can file one against any `content_creators` record, claimed or not, with a required freeform reason (e.g. "I'm Ben from NowBen, please take this down"). Always goes through manual moderation, since nothing backs the identity claim. This is the realistic path for entities — nobody is likely to formally claim "ServiceNow."
 
 - `id`
-- `content_creator_id` → `content_creators.id` (must be linked/verified to file one)
+- `content_creator_id` → `content_creators.id`
 - `submission_id` → `submissions.id`
-- `status` — pending / approved / rejected
-- `reason` (optional freeform)
+- `path` — enum: `verified_self` / `open_request`. Keeps the two visually/procedurally distinct in the moderation queue, per the original design intent.
+- `requested_by_user_id` → `users.id`. **Open question:** does filing an `open_request` require being logged in (any account), or fully anonymous? Not settled — see `todo.md` § Authors.
+- `status` — pending / approved / rejected, for `open_request`. `verified_self` executes immediately; its row is just an audit record.
+- `reason` — optional for `verified_self`, effectively required for `open_request` (there's no other basis to evaluate it on).
 
 ## Tagging Taxonomy
 

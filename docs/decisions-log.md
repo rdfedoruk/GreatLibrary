@@ -77,6 +77,10 @@ Reasoning:
 
 **Extensibility note:** choosing a provider like Supabase keeps email/password addable later as a config change rather than a redesign, if Google-only proves insufficient.
 
+**Reopened (2026-07-18):** it didn't survive contact with the real user base — the target audience mostly doesn't want social login, and prefers dedicated account creation for the site. Andrew has accepted this as necessary added work.
+
+**Resolved:** hybrid, not a replacement — Google OAuth stays, plus a dedicated email sign-in path, mirroring the "Continue with Google / OR / email" pattern used by Anthropic and OpenAI's own products. The email path starts as **magic-link/OTP (no password)** — this avoids the password reset flows and breach liability the original decision was trying to avoid in the first place, so most of that original reasoning still holds. Password-based sign-in stays available as a later additive option if users ask for it; Supabase treats it as a separate provider against the same accounts, not a redesign of this decision. Remaining before this is buildable: email verification approach. (Migration was a non-issue — only one account exists, Robert Fedoruk, who's staying on Google sign-in.) See `todo.md` § Accounts for the live item.
+
 ### Content Creators & Claiming
 **Problem:** a submission's creator (e.g. the person who made a YouTube video or wrote a Community post) is not necessarily a member of the platform at submission time. Without a separate identity for "who made this" vs. "who submitted this," a later-joining creator has no way to be linked to content submitted about them by someone else.
 
@@ -150,8 +154,6 @@ Community pages are treated as the content itself.
 
 ## Still Open / Not Yet Discussed
 
-- Nice-to-have features (not yet covered)
-- Full column-level schema (submissions, tags, users, votes, comments)
-- LinkedIn "which post" targeting mechanism (cursor/viewport-based vs. injected per-post button)
-- Actual ServiceNow Community URL structure (needed to finalize its handler)
-- Additional per-site handlers beyond LinkedIn/YouTube/Community (e.g. X/Twitter, Reddit, generic blogs)
+Design decisions blocking in-progress work now live in `open-questions.md`;
+feature ideas not yet scoped live in `todo.md`. This section is kept as a
+historical note, not a live list.
