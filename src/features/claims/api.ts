@@ -130,6 +130,22 @@ function normalizeUrl(url: string): string {
     .replace(/\/$/, '')
 }
 
+// Matches on the URL itself, not the `source_site` column — source_site
+// records which *submission handler* produced the row (manual form vs. the
+// not-yet-built browser plugin), not what platform the linked content is
+// on. Every submission today comes through the manual form, so it's always
+// 'manual' even for an obvious YouTube link; filtering on source_site would
+// silently exclude every real match.
+const YOUTUBE_URL = /(^|\.)youtube\.com$|(^|\.)youtu\.be$/
+
+function isYoutubeUrl(url: string): boolean {
+  try {
+    return YOUTUBE_URL.test(new URL(url).hostname)
+  } catch {
+    return false
+  }
+}
+
 // Finds already-submitted YouTube videos whose channel matches the given
 // identity, that aren't already attributed to this profile. Calls
 // YouTube's public oEmbed endpoint directly from the browser — it sends
@@ -145,13 +161,14 @@ export async function findYoutubeMatches(
   const { data: submissions, error } = await supabase
     .from('submissions')
     .select('id, url, description, submission_attributions ( profile_id )')
-    .eq('source_site', 'youtube')
 
   if (error) throw error
 
-  const unattributed = submissions.filter(
-    (s) => !s.submission_attributions.some((a) => a.profile_id === profileId),
-  )
+  const unattributed = submissions
+    .filter((s) => isYoutubeUrl(s.url))
+    .filter(
+      (s) => !s.submission_attributions.some((a) => a.profile_id === profileId),
+    )
 
   const results = await Promise.all(
     unattributed.map(async (s): Promise<YoutubeMatch | null> => {
