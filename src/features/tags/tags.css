@@ -51,13 +51,6 @@
   margin-bottom: 8px;
 }
 
-/* First Backspace arms the last chip; a second removes it. */
-.shell button.tag-option.armed {
-  color: #d0342c;
-  border-color: #d0342c;
-  background: transparent;
-}
-
 .tag-autocomplete {
   position: relative;
   max-width: 420px;

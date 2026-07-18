@@ -52,10 +52,6 @@ function TagAutocomplete({
   toggle: (id: string) => void
 }) {
   const [query, setQuery] = useState('')
-  // Two-step delete: first Backspace on an empty field "arms" the last chip
-  // (highlights it), a second Backspace removes it. Stops a stray keypress
-  // from silently dropping a tag.
-  const [armedTagId, setArmedTagId] = useState<string | null>(null)
 
   const q = query.trim().toLowerCase()
   const matches = q
@@ -72,34 +68,18 @@ function TagAutocomplete({
     : []
   const selectedTags = tags.filter((t) => selected.includes(t.id))
 
-  const remove = (id: string) => {
-    toggle(id)
-    setArmedTagId(null)
-  }
-
   const pick = (id: string) => {
     toggle(id)
     setQuery('')
-    setArmedTagId(null)
   }
 
+  // Enter picks the top match. Backspace is left alone — tags are removed
+  // only via each chip's × button, never from the input.
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       event.preventDefault() // keep the form from submitting mid-typing
       if (matches.length > 0) pick(matches[0].id)
-      return
     }
-    if (event.key === 'Backspace' && query === '' && selectedTags.length > 0) {
-      const last = selectedTags[selectedTags.length - 1]
-      if (armedTagId === last.id) {
-        event.preventDefault()
-        remove(last.id)
-      } else {
-        setArmedTagId(last.id) // arm; a second Backspace removes it
-      }
-      return
-    }
-    if (armedTagId) setArmedTagId(null) // any other key disarms
   }
 
   return (
@@ -111,11 +91,9 @@ function TagAutocomplete({
             <button
               key={tag.id}
               type="button"
-              className={`tag-option selected${
-                tag.id === armedTagId ? ' armed' : ''
-              }`}
+              className="tag-option selected"
               title="Remove tag"
-              onClick={() => remove(tag.id)}
+              onClick={() => toggle(tag.id)}
             >
               {tag.name} ×
             </button>
@@ -126,10 +104,7 @@ function TagAutocomplete({
         <input
           type="text"
           value={query}
-          onChange={(e) => {
-            setQuery(e.target.value)
-            if (armedTagId) setArmedTagId(null)
-          }}
+          onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onKeyDown}
           placeholder="Start typing — ITSM, Flow Designer…"
           aria-label="Search tags"

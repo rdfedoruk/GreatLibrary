@@ -46,10 +46,11 @@ selected tags shown as removable chips).
   deliberate admin add). Input shows a hint when nothing matches.
 - Medium stayed as three visible chips.
 
-## 5. Two-step tag delete (Backspace) — DONE 2026-07-17
-Backspace on an empty tag field no longer instantly drops the last chip. First
-Backspace "arms" the last chip (red highlight); a second removes it. Typing or
-any other key disarms. Prevents a stray keystroke from silently deleting a tag.
+## 5. Tag removal is by chip button only — SETTLED 2026-07-17
+Backspace in the tag input does nothing to selected tags. Tags are removed only
+via each chip's × button. (An earlier two-step Backspace-to-delete was built,
+then removed at Andrew's call — the input should have nothing to do with
+clearing tags.)
 
 ## 6. Low-friction tag adding via a reconciliation queue
 **Decision (Andrew, 2026-07-17):** let submitters propose tags freely at submit
