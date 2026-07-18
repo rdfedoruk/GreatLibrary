@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { VoteControl } from '../votes'
 import { fetchSubmissions, type SubmissionListItem } from './api'
 import './submissions.css'
 
@@ -18,7 +19,13 @@ function hostOf(url: string): string {
   }
 }
 
-function SubmissionCard({ item }: { item: SubmissionListItem }) {
+function SubmissionCard({
+  item,
+  currentUserId,
+}: {
+  item: SubmissionListItem
+  currentUserId: string | null
+}) {
   const date = new Date(item.created_at).toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -29,9 +36,12 @@ function SubmissionCard({ item }: { item: SubmissionListItem }) {
 
   return (
     <article className="submission-card">
-      <div className="submission-score" title="Net votes">
-        {item.score > 0 ? `+${item.score}` : item.score}
-      </div>
+      <VoteControl
+        submissionId={item.id}
+        initialScore={item.score}
+        initialUserVote={item.userVote}
+        currentUserId={currentUserId}
+      />
       <div className="submission-body">
         <a
           className="submission-link"
@@ -64,13 +74,19 @@ function SubmissionCard({ item }: { item: SubmissionListItem }) {
   )
 }
 
-export function SubmissionList({ refreshKey = 0 }: { refreshKey?: number }) {
+export function SubmissionList({
+  currentUserId = null,
+  refreshKey = 0,
+}: {
+  currentUserId?: string | null
+  refreshKey?: number
+}) {
   const [items, setItems] = useState<SubmissionListItem[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    fetchSubmissions()
+    fetchSubmissions(currentUserId)
       .then((data) => {
         if (!cancelled) setItems(data)
       })
@@ -80,7 +96,7 @@ export function SubmissionList({ refreshKey = 0 }: { refreshKey?: number }) {
     return () => {
       cancelled = true
     }
-  }, [refreshKey])
+  }, [currentUserId, refreshKey])
 
   if (error) {
     return <p className="submission-status">Couldn’t load the library: {error}</p>
@@ -98,7 +114,11 @@ export function SubmissionList({ refreshKey = 0 }: { refreshKey?: number }) {
   return (
     <section className="submission-list" aria-label="Submissions">
       {items.map((item) => (
-        <SubmissionCard key={item.id} item={item} />
+        <SubmissionCard
+          key={item.id}
+          item={item}
+          currentUserId={currentUserId}
+        />
       ))}
     </section>
   )

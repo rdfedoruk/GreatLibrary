@@ -69,15 +69,6 @@
   border-bottom: 1px solid var(--border);
 }
 
-.submission-score {
-  min-width: 2.5em;
-  font-family: var(--mono);
-  font-size: 15px;
-  color: var(--text-h);
-  text-align: center;
-  padding-top: 3px;
-}
-
 .submission-body {
   display: flex;
   flex-direction: column;

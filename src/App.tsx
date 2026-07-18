@@ -38,7 +38,10 @@ function App() {
           onSubmitted={() => setRefreshKey((k) => k + 1)}
         />
       )}
-      <SubmissionList refreshKey={refreshKey} />
+      <SubmissionList
+        currentUserId={session?.user.id ?? null}
+        refreshKey={refreshKey}
+      />
     </main>
   )
 }
