@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import './App.css'
 import { signInWithGoogle, signOut, useSession } from './lib/auth'
-import { SubmissionList } from './features/submissions'
+import { SubmissionList, SubmitForm } from './features/submissions'
 
 function App() {
   const { session, loading } = useSession()
+  const [refreshKey, setRefreshKey] = useState(0)
 
   return (
     <main className="shell">
@@ -30,7 +32,13 @@ function App() {
         </div>
       </header>
 
-      <SubmissionList />
+      {session && (
+        <SubmitForm
+          userId={session.user.id}
+          onSubmitted={() => setRefreshKey((k) => k + 1)}
+        />
+      )}
+      <SubmissionList refreshKey={refreshKey} />
     </main>
   )
 }

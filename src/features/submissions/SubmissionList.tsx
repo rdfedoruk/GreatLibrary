@@ -64,7 +64,7 @@ function SubmissionCard({ item }: { item: SubmissionListItem }) {
   )
 }
 
-export function SubmissionList() {
+export function SubmissionList({ refreshKey = 0 }: { refreshKey?: number }) {
   const [items, setItems] = useState<SubmissionListItem[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -80,7 +80,7 @@ export function SubmissionList() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [refreshKey])
 
   if (error) {
     return <p className="submission-status">Couldn’t load the library: {error}</p>

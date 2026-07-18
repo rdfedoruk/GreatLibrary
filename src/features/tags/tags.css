@@ -1,0 +1,105 @@
+.tag-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tag-picker-status {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.tag-group {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tag-group legend {
+  font-size: 14px;
+  color: var(--text-h);
+  padding: 0 0 6px;
+}
+
+.tag-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.shell button.tag-option {
+  font-size: 13px;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.shell button.tag-option:hover {
+  border-color: var(--accent-border);
+}
+
+.shell button.tag-option.selected {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.tag-selected-row {
+  margin-bottom: 8px;
+}
+
+.tag-autocomplete {
+  position: relative;
+  max-width: 420px;
+}
+
+.tag-autocomplete input {
+  width: 100%;
+  box-sizing: border-box;
+  font: 15px/140% var(--sans);
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.tag-autocomplete input:focus {
+  outline: none;
+  border-color: var(--accent-border);
+}
+
+.tag-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+
+.shell .tag-suggestions button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+  padding: 6px 8px;
+  color: var(--text-h);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+}
+
+.shell .tag-suggestions button:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}

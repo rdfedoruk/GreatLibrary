@@ -22,6 +22,52 @@ export interface SubmissionListItem {
   score: number
 }
 
+export interface NewSubmission {
+  url: string
+  description: string
+  tagIds: string[]
+}
+
+// Two inserts, not a transaction: if tagging fails the submission still
+// lands untagged. Acceptable at current scale — an RPC can make it atomic
+// if orphaned-tag reports ever show up.
+export async function createSubmission(
+  input: NewSubmission,
+  userId: string,
+): Promise<void> {
+  const { data: submission, error } = await supabase
+    .from('submissions')
+    .insert({
+      url: input.url,
+      description: input.description,
+      source_site: 'manual',
+      submitted_by: userId,
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    if (error.code === '23505') {
+      throw new Error('That URL is already in the library.')
+    }
+    throw new Error(error.message)
+  }
+
+  if (input.tagIds.length > 0) {
+    const { error: tagError } = await supabase.from('submission_tags').insert(
+      input.tagIds.map((tagId) => ({
+        submission_id: submission.id,
+        tag_id: tagId,
+      })),
+    )
+    if (tagError) {
+      throw new Error(
+        `Submitted, but tagging failed: ${tagError.message}`,
+      )
+    }
+  }
+}
+
 // Vote score is summed client-side from the embedded rows. Fine at current
 // scale; switch to a DB view/aggregate if lists get long or hot.
 export async function fetchSubmissions(): Promise<SubmissionListItem[]> {
