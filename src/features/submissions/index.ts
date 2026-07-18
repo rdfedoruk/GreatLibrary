@@ -6,6 +6,8 @@ export { fetchSubmissions, createSubmission } from './api'
 export type {
   SubmissionListItem,
   SubmissionTag,
+  SubmissionFilter,
   SourceSite,
   NewSubmission,
+  ProfileRef,
 } from './api'

@@ -31,7 +31,14 @@
       "PowerShell(git add src/features/tags docs/submission-todo.md)",
       "PowerShell(git add src)",
       "Bash(git mv *)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git commit -m ' *)",
+      "Bash(git branch *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(npx tsc *)",
+      "Bash(npx supabase *)",
+      "Bash(rm -f gen_err.txt)"
     ]
   }
 }

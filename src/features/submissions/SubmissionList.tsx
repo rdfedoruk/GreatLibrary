@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { VoteControl } from '../votes'
-import { fetchSubmissions, type SubmissionListItem } from './api'
+import {
+  fetchSubmissions,
+  type SubmissionFilter,
+  type SubmissionListItem,
+} from './api'
 import './submissions.css'
 
 const SOURCE_LABELS: Record<SubmissionListItem['source_site'], string> = {
@@ -53,8 +58,24 @@ function SubmissionCard({
         </a>
         <p className="submission-meta">
           {hostOf(item.url)} · {SOURCE_LABELS[item.source_site]}
-          {item.creatorName ? ` · by ${item.creatorName}` : ''} · submitted by{' '}
-          {item.submitterName} · {date}
+          {item.creators.length > 0 && (
+            <>
+              {' · by '}
+              {item.creators.map((c, i) => (
+                <span key={c.slug}>
+                  {i > 0 && ', '}
+                  <Link className="profile-link" to={`/profile/${c.slug}`}>
+                    {c.name}
+                  </Link>
+                </span>
+              ))}
+            </>
+          )}
+          {' · submitted by '}
+          <Link className="profile-link" to={`/profile/${item.submitter.slug}`}>
+            {item.submitter.name}
+          </Link>{' '}
+          · {date}
         </p>
         {item.tags.length > 0 && (
           <ul className="submission-tags">
@@ -77,16 +98,20 @@ function SubmissionCard({
 export function SubmissionList({
   currentUserId = null,
   refreshKey = 0,
+  filter,
+  emptyMessage = 'The shelves are empty — the first submission will land here.',
 }: {
   currentUserId?: string | null
   refreshKey?: number
+  filter?: SubmissionFilter
+  emptyMessage?: string
 }) {
   const [items, setItems] = useState<SubmissionListItem[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    fetchSubmissions(currentUserId)
+    fetchSubmissions(currentUserId, filter)
       .then((data) => {
         if (!cancelled) setItems(data)
       })
@@ -96,7 +121,7 @@ export function SubmissionList({
     return () => {
       cancelled = true
     }
-  }, [currentUserId, refreshKey])
+  }, [currentUserId, refreshKey, filter?.submittedBy, filter?.attributedTo])
 
   if (error) {
     return <p className="submission-status">Couldn’t load the library: {error}</p>
@@ -105,11 +130,7 @@ export function SubmissionList({
     return <p className="submission-status">Loading the library…</p>
   }
   if (items.length === 0) {
-    return (
-      <p className="submission-status">
-        The shelves are empty — the first submission will land here.
-      </p>
-    )
+    return <p className="submission-status">{emptyMessage}</p>
   }
   return (
     <section className="submission-list" aria-label="Submissions">

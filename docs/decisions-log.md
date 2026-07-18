@@ -81,6 +81,22 @@ Reasoning:
 
 **Resolved:** hybrid, not a replacement — Google OAuth stays, plus a dedicated email sign-in path, mirroring the "Continue with Google / OR / email" pattern used by Anthropic and OpenAI's own products. The email path starts as **magic-link/OTP (no password)** — this avoids the password reset flows and breach liability the original decision was trying to avoid in the first place, so most of that original reasoning still holds. Password-based sign-in stays available as a later additive option if users ask for it; Supabase treats it as a separate provider against the same accounts, not a redesign of this decision. Remaining before this is buildable: email verification approach. (Migration was a non-issue — only one account exists, Robert Fedoruk, who's staying on Google sign-in.) See `todo.md` § Accounts for the live item.
 
+### Unified Profiles (2026-07-18 — supersedes "Content Creators & Claiming" below)
+
+The users-vs-content_creators split (below, kept for history) solved attribution-before-membership but created a seam: Mark's page as an unclaimed creator and Mark's presence as a member were two different kinds of thing, and joining the site would have made "see Mark's stuff" feel like a different place. Redesigned in conversation 2026-07-18. The plain-English statement of the design, kept verbatim because it's the clearest expression of it:
+
+- **Everyone gets one page.** Whether it's Mark, or ServiceNow the company, or the CJ&TheDuke podcast — each has exactly one page on the site, showing who they are and all content connected to them. The page's web address never changes.
+- **A page can exist before the person joins.** The first time someone submits one of Mark's videos and attributes it to him, the site creates Mark's page right then. Mark has no idea. Visitors can browse everything attributed to him.
+- **We keep a list of "how we know it's Mark's."** Behind the page is a list: this YouTube channel, this Community username, this blog. New content from that channel lands on Mark's page automatically. A new platform someday is just another line on the list — no rebuilding.
+- **When Mark joins, he points at his page and says "that's me."** No magic connects his email signup to his page — a human reviews and approves. Once approved, it's still the same page — it just gains a checkmark, and Mark can edit his bio and manage his stuff.
+- **If Mark joined earlier and was commenting before claiming,** he accidentally has two pages. Fixing that means folding his small member activity into the author page and retiring the duplicate. Mildly annoying, rare, reduced further by asking at signup: "are you any of these people?"
+- **Companies and podcasts never log in.** Real people get connected to them instead. CJ and TheDuke each claim their own personal page, then each is listed as a host of the podcast's page; either can act on its behalf. ServiceNow-the-company sits unclaimed forever, which is fine.
+- **One piece of content can point at several pages.** A podcast episode shows up on the podcast's page and on both hosts' pages.
+
+**Slug addendum (same day):** profile pages live at `/profile/<slug>` with a readable slug generated from the display name (deduped with numeric suffixes). Andrew challenged the initial "the URL never changes, forever" framing — YouTube and LinkedIn both let you rename handles — and it didn't survive: the *permanent* thing is the internal profile id (everything in the database points at it), while the slug is just a changeable label. Renames only cost old external links, and a retired-slug forwarding table fixes even that — backlogged in `todo.md` § Accounts, to be built with slug editing.
+
+Schema consequences (full shape in `data-model.md`): one `profiles` table replaces `profiles` + `content_creators`; `profile_identities` child table for platform identities; `entity_members` for who-acts-for-an-entity; `submission_attributions` many-to-many for attribution; `merged_into` tombstone column for the duplicate-page case; all activity (submissions, comments, votes) references profile IDs, not auth users. Entities have `linked_user_id` permanently null — claiming is person-only.
+
 ### Content Creators & Claiming
 **Problem:** a submission's creator (e.g. the person who made a YouTube video or wrote a Community post) is not necessarily a member of the platform at submission time. Without a separate identity for "who made this" vs. "who submitted this," a later-joining creator has no way to be linked to content submitted about them by someone else.
 

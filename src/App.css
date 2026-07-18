@@ -47,3 +47,40 @@
 .account-name {
   font-size: 15px;
 }
+
+.signin-options {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.signin-divider {
+  opacity: 0.6;
+  font-size: 14px;
+}
+
+.email-signin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.email-signin input {
+  font-size: 15px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+}
+
+.email-error {
+  font-size: 13px;
+  color: #d33;
+}
+
+.masthead-home {
+  color: inherit;
+  text-decoration: none;
+}

@@ -21,17 +21,46 @@ checking in first.
     avoid in the first place). Password-based sign-in can be added later as
     an additive second option if users ask for it — Supabase treats these as
     separate providers against the same accounts, not a redesign.
-  - Not designed yet: email verification approach.
+  - DECIDED 2026-07-18: magic-link (click-through), not OTP code entry —
+    simpler UX, no code-input UI needed. Built in `src/lib/auth.ts`
+    (`signInWithEmail`) and the email form in `App.tsx`.
   - Migration: not a concern — only one account exists (Robert Fedoruk), and
     he's staying on Google sign-in.
+  - **Not designed yet: session length / "remember me" control.** Currently
+    just Supabase Auth's default persistent session (`persistSession: true`,
+    long-lived refresh token) — same for everyone, no shared-device option.
+    Revisit if it matters for shared/public-computer use.
   - Cosmetic (separate, minor, only matters if Google stays): sign-in screen
     shows the raw Supabase URL, not the app's own domain. Fix needs a custom
     domain plus Supabase's paid custom-domain add-on.
-- **Profile page** — not designed yet.
+- **Profile page** — BUILT (2026-07-18): `/profile/:slug` in
+  `src/features/profiles/` — name, claimed ✓, entity chip, attributed
+  content, submitted content. Slug decision: readable slug, changeable
+  (the permanent identity is the profile id; the slug is just the name on
+  the door — Andrew's challenge to "URLs are forever," accepted).
+  - **Backlog: retired-slug forwarding** — when a slug changes, keep the
+    old slug in a lookup table pointing at the profile id so old external
+    links still land. Cheap, do it when slug *editing* gets built.
+  - **Backlog: slug editing UI** — no way to change a slug in-app yet
+    (admin can via SQL). Build alongside display-name editing.
+  - Note: the email test account's slug is `rdfspeaks-gmail-com` (display
+    name defaults to the email address for magic-link signups) — fix by
+    editing display name + slug when that UI exists.
 - **Avatar scraping / editing** — not designed yet. **DECISION NEEDED:** pull
   from the Google account, let users upload their own, or both?
 
 ## Authors
+
+> **2026-07-18 — Unified Profiles redesign supersedes the terminology below.**
+> `content_creators` no longer exists as a separate table: one `profiles` table
+> covers members, creators, and entities; `creator_identities` is now
+> `profile_identities`; `submission_creators` is now `submission_attributions`;
+> new `entity_members` table (claimed people act for entities, which never log
+> in); new `merged_into` column for the joined-before-claiming duplicate case.
+> See `data-model.md` § The Identity Model and `decisions-log.md` § Unified
+> Profiles. The items below remain valid as feature intents; read their table
+> names through that mapping. Migration applied 2026-07-18
+> (`20260718000003_unified_profiles.sql`) — the live schema has the new shape.
 
 - **Content claiming** — designed, not built (Phase 4). Matched by platform
   identity keys via `creator_identities` (channel ID, profile URL — never

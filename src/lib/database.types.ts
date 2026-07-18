@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -41,37 +41,30 @@ export type Database = {
     Tables: {
       claims: {
         Row: {
-          content_creator_id: string
           created_at: string
           id: string
+          profile_id: string
           status: Database["public"]["Enums"]["review_status"]
           user_id: string
         }
         Insert: {
-          content_creator_id: string
           created_at?: string
           id?: string
+          profile_id: string
           status?: Database["public"]["Enums"]["review_status"]
           user_id: string
         }
         Update: {
-          content_creator_id?: string
           created_at?: string
           id?: string
+          profile_id?: string
           status?: Database["public"]["Enums"]["review_status"]
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "claims_content_creator_id_fkey"
-            columns: ["content_creator_id"]
-            isOneToOne: false
-            referencedRelation: "content_creators"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "claims_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "claims_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -120,38 +113,65 @@ export type Database = {
           },
         ]
       }
-      content_creators: {
+      entity_members: {
         Row: {
           created_at: string
-          display_name: string
-          id: string
-          linked_user_id: string | null
-          linkedin_profile_url: string | null
-          sn_community_username: string | null
-          youtube_channel_id: string | null
+          entity_id: string
+          person_id: string
         }
         Insert: {
           created_at?: string
-          display_name: string
-          id?: string
-          linked_user_id?: string | null
-          linkedin_profile_url?: string | null
-          sn_community_username?: string | null
-          youtube_channel_id?: string | null
+          entity_id: string
+          person_id: string
         }
         Update: {
           created_at?: string
-          display_name?: string
-          id?: string
-          linked_user_id?: string | null
-          linkedin_profile_url?: string | null
-          sn_community_username?: string | null
-          youtube_channel_id?: string | null
+          entity_id?: string
+          person_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "content_creators_linked_user_id_fkey"
-            columns: ["linked_user_id"]
+            foreignKeyName: "entity_members_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_members_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_identities: {
+        Row: {
+          created_at: string
+          id: string
+          identity_value: string
+          platform: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          identity_value: string
+          platform: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          identity_value?: string
+          platform?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_identities_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -163,54 +183,113 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          linked_user_id: string | null
+          merged_into: string | null
+          slug: string
+          type: Database["public"]["Enums"]["profile_type"]
         }
         Insert: {
           created_at?: string
           display_name: string
-          id: string
+          id?: string
+          linked_user_id?: string | null
+          merged_into?: string | null
+          slug: string
+          type?: Database["public"]["Enums"]["profile_type"]
         }
         Update: {
           created_at?: string
           display_name?: string
           id?: string
+          linked_user_id?: string | null
+          merged_into?: string | null
+          slug?: string
+          type?: Database["public"]["Enums"]["profile_type"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_merged_into_fkey"
+            columns: ["merged_into"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       removal_requests: {
         Row: {
-          content_creator_id: string
           created_at: string
           id: string
+          path: Database["public"]["Enums"]["removal_path"]
+          profile_id: string
           reason: string | null
+          requested_by_user_id: string | null
           status: Database["public"]["Enums"]["review_status"]
           submission_id: string
         }
         Insert: {
-          content_creator_id: string
           created_at?: string
           id?: string
+          path: Database["public"]["Enums"]["removal_path"]
+          profile_id: string
           reason?: string | null
+          requested_by_user_id?: string | null
           status?: Database["public"]["Enums"]["review_status"]
           submission_id: string
         }
         Update: {
-          content_creator_id?: string
           created_at?: string
           id?: string
+          path?: Database["public"]["Enums"]["removal_path"]
+          profile_id?: string
           reason?: string | null
+          requested_by_user_id?: string | null
           status?: Database["public"]["Enums"]["review_status"]
           submission_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "removal_requests_content_creator_id_fkey"
-            columns: ["content_creator_id"]
+            foreignKeyName: "removal_requests_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
-            referencedRelation: "content_creators"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "removal_requests_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submission_attributions: {
+        Row: {
+          created_at: string
+          profile_id: string
+          submission_id: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          submission_id: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_attributions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submission_attributions_submission_id_fkey"
             columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "submissions"
@@ -250,7 +329,6 @@ export type Database = {
       }
       submissions: {
         Row: {
-          content_creator_id: string | null
           created_at: string
           description: string
           id: string
@@ -259,7 +337,6 @@ export type Database = {
           url: string
         }
         Insert: {
-          content_creator_id?: string | null
           created_at?: string
           description: string
           id?: string
@@ -268,7 +345,6 @@ export type Database = {
           url: string
         }
         Update: {
-          content_creator_id?: string | null
           created_at?: string
           description?: string
           id?: string
@@ -277,13 +353,6 @@ export type Database = {
           url?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "submissions_content_creator_id_fkey"
-            columns: ["content_creator_id"]
-            isOneToOne: false
-            referencedRelation: "content_creators"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "submissions_submitted_by_fkey"
             columns: ["submitted_by"]
@@ -352,10 +421,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_profile_slug: { Args: { name: string }; Returns: string }
+      slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
       comment_type: "comment" | "suggestion" | "critique"
+      profile_type: "person" | "entity"
+      removal_path: "verified_self" | "open_request"
       review_status: "pending" | "approved" | "rejected"
       source_site:
         | "linkedin"
@@ -495,6 +567,8 @@ export const Constants = {
   public: {
     Enums: {
       comment_type: ["comment", "suggestion", "critique"],
+      profile_type: ["person", "entity"],
+      removal_path: ["verified_self", "open_request"],
       review_status: ["pending", "approved", "rejected"],
       source_site: ["linkedin", "youtube", "sn_community", "manual", "generic"],
       tag_dimension: ["module", "medium"],

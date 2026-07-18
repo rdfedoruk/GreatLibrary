@@ -11,17 +11,27 @@ export interface SubmissionTag {
   name: string
 }
 
+export interface ProfileRef {
+  name: string
+  slug: string
+}
+
 export interface SubmissionListItem {
   id: string
   url: string
   description: string
   source_site: SourceSite
   created_at: string
-  submitterName: string
-  creatorName: string | null
+  submitter: ProfileRef
+  creators: ProfileRef[]
   tags: SubmissionTag[]
   score: number
   userVote: VoteValue | null
+}
+
+export interface SubmissionFilter {
+  submittedBy?: string
+  attributedTo?: string
 }
 
 export interface NewSubmission {
@@ -75,17 +85,37 @@ export async function createSubmission(
 // scale; switch to a DB view/aggregate if lists get long or hot.
 export async function fetchSubmissions(
   currentUserId: string | null,
+  filter: SubmissionFilter = {},
 ): Promise<SubmissionListItem[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('submissions')
     .select(
       `id, url, description, source_site, created_at,
-       submitter:profiles!submissions_submitted_by_fkey ( display_name ),
-       creator:content_creators ( display_name ),
+       submitter:profiles!submissions_submitted_by_fkey ( display_name, slug ),
+       submission_attributions ( profiles ( display_name, slug ) ),
        submission_tags ( tags ( id, dimension, name ) ),
        votes ( user_id, value )`,
     )
     .order('created_at', { ascending: false })
+
+  if (filter.submittedBy) {
+    query = query.eq('submitted_by', filter.submittedBy)
+  }
+  if (filter.attributedTo) {
+    // Two steps rather than an !inner join filter, so the embedded
+    // attribution list still shows ALL of a submission's creators, not just
+    // the one being filtered on.
+    const { data: rows, error: attrError } = await supabase
+      .from('submission_attributions')
+      .select('submission_id')
+      .eq('profile_id', filter.attributedTo)
+    if (attrError) throw attrError
+    const ids = rows.map((r) => r.submission_id)
+    if (ids.length === 0) return []
+    query = query.in('id', ids)
+  }
+
+  const { data, error } = await query
 
   if (error) throw error
 
@@ -99,8 +129,15 @@ export async function fetchSubmissions(
       description: row.description,
       source_site: row.source_site,
       created_at: row.created_at,
-      submitterName: row.submitter.display_name,
-      creatorName: row.creator?.display_name ?? null,
+      submitter: {
+        name: row.submitter.display_name,
+        slug: row.submitter.slug,
+      },
+      creators: row.submission_attributions.flatMap((a) =>
+        a.profiles
+          ? [{ name: a.profiles.display_name, slug: a.profiles.slug }]
+          : [],
+      ),
       tags: row.submission_tags.flatMap((st) => st.tags ?? []),
       score: row.votes.reduce((sum, v) => sum + v.value, 0),
       userVote: (own?.value as VoteValue | undefined) ?? null,

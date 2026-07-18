@@ -30,6 +30,13 @@ export function signInWithGoogle() {
   })
 }
 
+export function signInWithEmail(email: string) {
+  return supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.origin },
+  })
+}
+
 export function signOut() {
   return supabase.auth.signOut()
 }

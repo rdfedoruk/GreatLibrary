@@ -1,75 +1,111 @@
 # Data Model
 
-Status: core entities and relationships are decided, including the tagging taxonomy. Full column-level schema is not yet finalized (see Open Questions). Treat this as a strong first draft, not a final migration.
+Status: core entities and relationships are decided, including the tagging taxonomy and the unified-profiles identity model (revised 2026-07-18, superseding the earlier users-vs-content_creators split). Full column-level schema is not yet finalized (see Open Questions). Treat this as a strong first draft, not a final migration.
 
-## Entities
+Applied to the live schema by `supabase/migrations/20260718000003_unified_profiles.sql` (2026-07-18); `src/lib/database.types.ts` regenerated to match.
 
-### users
-Created via Supabase Auth (Google OAuth only for v1). No password fields, no email/password flow.
+## The Identity Model (revised 2026-07-18)
+
+**One page per public identity.** Every person or entity that appears on the site — a creator, a company, a podcast, or an ordinary member — has exactly one `profiles` row, which backs one public page with a stable URL. There is no separate "content creator" object; the profile *is* the creator record, whether or not anyone has logged in behind it.
+
+Plain-English version of the whole design (canonical explanation lives in `decisions-log.md` § Unified Profiles):
+
+- A page can exist before its person joins — created the first time content is attributed to them.
+- Joining the site never creates a *second* public identity for someone who already has a page; claiming attaches a login to the page that already exists. Same URL, same content — the page just gains a claimed badge, an editable bio, and the owner's rights.
+- Members who sign up fresh (never pre-attributed) get the same shape of page, just born already-claimed. There is only one kind of person-page on the site.
+- Entities never log in. Real, claimed people are linked to them as members and act on their behalf.
+
+### profiles
+The single public-identity table. Replaces both the old `profiles` and `content_creators` tables.
+
+- `id`
+- `display_name`
+- `type` — enum: `person` / `entity`. Drives UI treatment (entity chips/pages render distinctly) — not a behavioral fork in the schema, with one exception: only `person` profiles can be claimed.
+- `linked_user_id` → Supabase `auth.users.id`, nullable. Set when a person claims the profile (or immediately at signup for a fresh member). **Always null for entities — permanently.** One auth user links to at most one profile.
+- `merged_into` → `profiles.id`, nullable. Tombstone pointer for the duplicate-page case (see Merging below). A profile with this set is retired; anything resolving it should follow the pointer.
+- `created_at`
+
+### profile_identities
+How we know which platform accounts belong to a profile. Replaces the earlier `creator_identities` name and, before that, the fixed identity columns (`youtube_channel_id`, etc.), which couldn't scale — every new platform meant a migration, and one creator can hold many identities.
+
+- `id`
+- `profile_id` → `profiles.id`
+- `platform` — youtube / linkedin / sn_community / podcast / website / etc. Open-ended; new platforms are new rows, never schema changes.
+- `identity_value` — the channel ID / profile URL / username / domain.
+
+These rows do two jobs:
+1. **Attribution matching** — a submitted YouTube video's channel ID routes it to the right profile automatically. Never match on `display_name` alone (collides, changes).
+2. **Claim evidence** — when someone claims a profile, these identities are what the moderator is verifying they actually control.
+
+### entity_members
+Who can act for an entity. Entities are never claimed; instead, claimed *people* are linked to them.
+
+- `entity_id` → `profiles.id` (type = entity)
+- `person_id` → `profiles.id` (type = person)
+
+A claimed person who is a member of an entity can act on its behalf (removal requests, bio edits). Verification stays human-scale: you verify a *person* once (their own claim), then eyeball their relationship to the entity — you never have to "verify ServiceNow." Doubles as public info: the entity page lists its members ("Hosts: CJ, TheDuke"), and each person's page lists their entities.
+
+ServiceNow-the-company stays memberless and unclaimed forever, which is fine — takedowns on its behalf go through the open-request moderation path.
+
+### Claiming
+Person-only. There is **no automatic join key** between an email signup and a pre-existing page — emails won't match, names collide. The connection is always an explicit claim, manually verified:
+
+1. User signs up (name + email, or Google).
+2. Signup flow asks "are you any of these people?" — a search over unclaimed person profiles. This catches most claims at the door and avoids the merge case below.
+3. Claim request routes through the same moderation queue as submissions (no separate review system at this scale). Admin verifies against `profile_identities` and approves.
+4. On approval, `profiles.linked_user_id` is set. All existing and future attributed content displays as the now-claimed page retroactively — no submission rows touched.
+
+#### claims
+- `id`
+- `user_id` → `auth.users.id`
+- `profile_id` → `profiles.id` (must be type = person, unclaimed)
+- `status` — pending / approved / rejected
+- `created_at`
+
+### Merging (the Mark-commented-first case)
+If someone signs up and is active *before* claiming, they have two pages: a young member page (a few comments/votes) and an old attributed page (the heavy one, with inbound links). The fix is asymmetric, not a true merge: keep the attributed page, repoint the auth user's link to it, move the member page's few activity rows over (`UPDATE ... SET profile_id`), and set `merged_into` on the retired member page so stray links redirect.
+
+Collision edge (e.g. he upvoted his own attributed submission from the member account, tripping one-vote-per-user): on conflict, keep one, drop the other. Rare, admin-initiated, acceptable at this scale. The signup-time "are you one of these?" prompt is the real mitigation.
+
+## Content Entities
 
 ### submissions
-- `submitted_by` → `users.id` — fixed at submission time, never reassigned.
+- `submitted_by` → `profiles.id` — the member who found and posted the link. Fixed at submission time, never reassigned. (Note: references the profile, not the auth user — this is what lets a person's member activity and authored content live on one page.)
 - `url` — the resolved, canonical URL (see browser-plugin-spec.md for per-site resolution rules)
 - `description` — short, user-provided or auto-suggested (never full scraped content)
 - `source_site` — which handler produced this (linkedin / youtube / sn_community / manual / generic)
 - Tags — many-to-many via a join table against the tag taxonomy (see Tagging Taxonomy below)
-- Creators — many-to-many via `submission_creators` (see below), not a single FK.
+- Attribution — many-to-many via `submission_attributions` (below), not a single FK.
 
-### content_creators
-Separate from `users` — represents whoever actually made the content, independent of whether they're a platform member yet. Can be a **person** (Robert Fedoruk) or an **entity** (ServiceNow, NowBen, CJ&TheDuke) — same table, same relationships, same claim mechanics; entities are just far less likely to ever actually get claimed.
-
-- `id`
-- `display_name`
-- `type` — enum: `person` / `entity`. Drives UI treatment (entity chips render distinctly from person chips) — not a behavioral fork in the schema itself.
-- `linked_user_id` → `users.id`, nullable, set on successful claim. Same claim flow regardless of type.
-
-**Revised (2026-07-18):** three fixed identity columns (`youtube_channel_id`, `linkedin_profile_url`, `sn_community_username`) didn't scale — every new platform meant another migration, and couldn't represent one creator with, say, a YouTube channel *and* a podcast *and* a Community handle. Replaced with a child table:
-
-### creator_identities
-- `id`
-- `content_creator_id` → `content_creators.id`
-- `platform` — youtube / linkedin / sn_community / podcast / website / etc. Open-ended — add values as new platforms come up, no schema change needed to add another identity of an existing platform type.
-- `identity_value` — the channel ID / profile URL / username / domain. This is the matching key — never match on `display_name` alone (collides, changes).
-
-One creator can hold any number of identities across any number of platforms.
-
-### submission_creators
-Who actually made a submission's content — many-to-many, since content can have co-creators (a podcast's co-hosts) or multiple attributed parties (a publisher entity *and* the person featured in it, e.g. a ServiceNow-published video featuring Robert Fedoruk).
+### submission_attributions
+Who actually made a submission's content — many-to-many (replaces the interim `submission_creators` name). Content can have co-creators (a podcast's co-hosts) or multiple attributed parties, including an entity *and* its people: one episode shows up on the podcast's page and on both hosts' pages.
 
 - `submission_id` → `submissions.id`
-- `content_creator_id` → `content_creators.id`
+- `profile_id` → `profiles.id`
 
-**No role field** (author / publisher / featured, etc. — considered, dropped: see removal_requests below for why it turned out unnecessary). Attribution here works like tagging: the submitter picks whichever creators they recognize, can miss someone (a co-host who doesn't get credited at first), and it's correctable later — unlike `submitted_by`, which is permanently fixed at submission time.
-
-### claims
-Tracks a user's request to link themselves to a `content_creators` record.
-
-- `id`
-- `user_id` → `users.id`
-- `content_creator_id` → `content_creators.id`
-- `status` — pending / approved / rejected
-- Routes through the same moderation queue as submissions (see Moderation below) — no separate review system needed at current scale.
+**No role field** (author / publisher / featured — considered, dropped: see removal_requests below for why it turned out unnecessary). Attribution works like tagging: the submitter picks whichever profiles they recognize, can miss someone, and it's correctable later — unlike `submitted_by`, which is permanently fixed.
 
 ### votes
-**Resolved (2026-07-17): upvote/downvote net score** (not star rating, not upvote-only). One vote per user per submission; `value` is +1 or -1, displayed as a net score. The downvote doubles as a light "wrong/outdated" quality signal alongside moderation.
+**Resolved (2026-07-17): upvote/downvote net score** (not star rating, not upvote-only). One vote per profile per submission; `value` is +1 or -1, displayed as a net score. The downvote doubles as a light "wrong/outdated" quality signal alongside moderation.
 
 ### comments
 - `comment_type` enum: `comment` / `suggestion` / `critique`
+- References `profiles.id` for the author.
 - Critiques may eventually carry structured sub-tags (accuracy, outdated, wrong version) rather than just freeform text — not required for v1, worth leaving room for.
 
 ### removal_requests
-**Revised (2026-07-18):** two separate mechanisms, replacing the earlier "must be linked/verified to file one" rule — a single mechanism couldn't cover both a verified individual and an unclaimable entity like ServiceNow.
+Two separate mechanisms (revised 2026-07-18) — a single mechanism couldn't cover both a verified individual and an unclaimable entity like ServiceNow:
 
-1. **Verified self-removal.** A creator with `linked_user_id` set (a real, claimed person) can pull content attributed to them directly. No moderation queue for this action — identity was already checked once, at claim time; re-checking it on every removal would just re-litigate a settled fact. This is also why `submission_creators` doesn't need a role field: any linked person can remove their own attributed content regardless of whether they were the "author," a "co-host," or just "featured."
-2. **Open takedown request.** Anyone can file one against any `content_creators` record, claimed or not, with a required freeform reason (e.g. "I'm Ben from NowBen, please take this down"). Always goes through manual moderation, since nothing backs the identity claim. This is the realistic path for entities — nobody is likely to formally claim "ServiceNow."
+1. **Verified self-removal.** A claimed person can pull content attributed to them directly — and, via `entity_members`, content attributed to an entity they belong to. No moderation queue for this action — identity was already checked once, at claim time. This is also why `submission_attributions` doesn't need a role field: any linked person can remove their own attributed content regardless of whether they were the "author," a "co-host," or just "featured."
+2. **Open takedown request.** Anyone can file one against any profile, claimed or not, with a required freeform reason ("I'm Ben from NowBen, please take this down"). Always goes through manual moderation, since nothing backs the identity claim. This is the realistic path for memberless entities.
 
 - `id`
-- `content_creator_id` → `content_creators.id`
+- `profile_id` → `profiles.id`
 - `submission_id` → `submissions.id`
-- `path` — enum: `verified_self` / `open_request`. Keeps the two visually/procedurally distinct in the moderation queue, per the original design intent.
-- `requested_by_user_id` → `users.id`. **Open question:** does filing an `open_request` require being logged in (any account), or fully anonymous? Not settled — see `todo.md` § Authors.
+- `path` — enum: `verified_self` / `open_request`. Keeps the two visually/procedurally distinct in the moderation queue.
+- `requested_by_user_id` → `auth.users.id`. **Open question:** does filing an `open_request` require being logged in, or fully anonymous? Not settled — see `todo.md` § Authors.
 - `status` — pending / approved / rejected, for `open_request`. `verified_self` executes immediately; its row is just an audit record.
-- `reason` — optional for `verified_self`, effectively required for `open_request` (there's no other basis to evaluate it on).
+- `reason` — optional for `verified_self`, effectively required for `open_request`.
 
 ## Tagging Taxonomy
 
@@ -92,13 +128,11 @@ No cap per submission — unlimited tags allowed. Discipline lives in the contro
 
 ## Auth / Account Model
 
-**Decision: Google-only sign-in for v1.**
+**Decision (revised 2026-07-18): hybrid sign-in.** Google OAuth plus a dedicated email sign-in path (magic-link, no password) — Google-only did not survive contact with the target audience. See `decisions-log.md` § Auth / Account Model for full reasoning and history.
 
-Reasoning: target audience (ServiceNow professionals) already has Google accounts; eliminates password reset/verification/account-linking build surface; lower solo-maintenance burden; minor secondary friction against low-effort spam accounts.
+Provider: Supabase Auth (bundles both providers + Postgres in one service). Auth users are plumbing, not public identity — the public identity is the `profiles` row an auth user links to.
 
-Provider: Supabase Auth (bundles Google OAuth + Postgres in one service).
-
-Revisit if: meaningful audience share is blocked from Google sign-in by corporate policy, or platform independence becomes a priority.
+Revisit if: users ask for password-based sign-in (additive, not a redesign — Supabase treats it as a separate provider against the same accounts).
 
 ## Moderation
 

@@ -116,3 +116,14 @@
   background: var(--accent-bg);
   border-color: transparent;
 }
+
+.profile-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(128, 120, 100, 0.4);
+  text-underline-offset: 2px;
+}
+
+.profile-link:hover {
+  text-decoration-color: currentColor;
+}
