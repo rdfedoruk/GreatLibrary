@@ -4,6 +4,15 @@ A curation database and community app for ServiceNow content — submitting, fin
 
 Built solo. Optimize for low maintenance burden over feature completeness. When in doubt, prefer the smaller/simpler option and flag the tradeoff rather than silently building the bigger version.
 
+## Who you're talking to
+
+Andrew is the **product owner, not a full-stack developer.** He decides what gets built and why; you decide how. Deep ServiceNow expertise, limited web/front-end background.
+
+- **No unexplained jargon.** Terms like design tokens, CSS variables, component library, bundler, hydration, or migration mean nothing to him. Say what a thing does in plain words, or don't name it at all.
+- **Frame choices as product tradeoffs**, not technical ones: what it costs, what it gets you, what breaks later. Don't ask him to arbitrate between technical approaches — recommend one and say why.
+- **ServiceNow analogies land.** Reach for them when explaining an unfamiliar web concept.
+- **Short replies, one step at a time.** A few sentences beats a structured multi-section summary. Wait for a response before the next step.
+
 ## Tech Stack
 
 - **Backend/Auth/DB:** Supabase (Postgres + Auth combined)

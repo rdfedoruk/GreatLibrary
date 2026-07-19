@@ -4,6 +4,7 @@ export interface Identity {
   id: string
   platform: string
   identity_value: string
+  verified: boolean
 }
 
 export interface IdentityConflict {
@@ -30,12 +31,32 @@ export interface MyClaim {
 export async function fetchIdentities(profileId: string): Promise<Identity[]> {
   const { data, error } = await supabase
     .from('profile_identities')
-    .select('id, platform, identity_value')
+    .select('id, platform, identity_value, verified')
     .eq('profile_id', profileId)
     .order('platform')
 
   if (error) throw error
   return data
+}
+
+// Hands the one-time Google token to the verify-youtube function, which
+// asks YouTube which channel it owns and records it. Verification is only
+// ever set server-side — see supabase/functions/verify-youtube/index.ts.
+export async function verifyYoutubeChannel(
+  providerToken: string,
+): Promise<{ channel: string; title: string | null }> {
+  const { data, error } = await supabase.functions.invoke('verify-youtube', {
+    body: { providerToken },
+  })
+  if (error) {
+    // Edge function errors carry the useful message in the response body.
+    const detail = await (error as { context?: Response }).context
+      ?.json()
+      .catch(() => null)
+    throw new Error(detail?.error ?? error.message)
+  }
+  if (data?.error) throw new Error(data.error)
+  return { channel: data.channel, title: data.title }
 }
 
 // Adds an identity to a profile. profile_identities has a global unique

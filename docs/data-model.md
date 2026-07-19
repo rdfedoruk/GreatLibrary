@@ -33,9 +33,35 @@ How we know which platform accounts belong to a profile. Replaces the earlier `c
 - `platform` — youtube / linkedin / sn_community / podcast / website / etc. Open-ended; new platforms are new rows, never schema changes.
 - `identity_value` — the channel ID / profile URL / username / domain.
 
+- `verified` / `verified_at` — **added 2026-07-18.** Whether the platform itself vouched for this identity.
+
 These rows do two jobs:
 1. **Attribution matching** — a submitted YouTube video's channel ID routes it to the right profile automatically. Never match on `display_name` alone (collides, changes).
 2. **Claim evidence** — when someone claims a profile, these identities are what the moderator is verifying they actually control.
+
+### Verified vs. asserted identities (2026-07-18)
+
+Typing "this channel is mine" proves nothing — anyone can type someone else's channel and pull their content onto their own page. So identities come in two kinds:
+
+- **Verified** — the platform confirmed it. Earns automatic attribution, and is the only kind safe to build removal rights on later.
+- **Asserted** (typed) — inert. Doesn't pull in content, doesn't lock anyone out, displays as unchecked.
+
+Rules that enforce this:
+- `verified` can only be set by the `verify-youtube` Edge Function via the service role key. The user-facing insert policy has `with check (verified = false)`. A client-side check would be forgeable, and a badge that means nothing is worse than no badge.
+- The unique constraint on `(platform, identity_value)` is now a **partial** index covering only verified rows. The old blanket constraint let a squatter type someone else's channel and permanently lock the real owner out of ever proving it.
+- Self-attribution requires the profile to hold at least one verified identity.
+
+**What can actually be verified** (researched 2026-07-18):
+
+| Platform | Provable? | Content scan? |
+|---|---|---|
+| YouTube | Yes — Google sign-in returns the channel the account owns | Yes (oEmbed, built) |
+| Podcast | Yes — Apple-style code placed in the RSS feed (not built) | Yes — one feed fetch lists every episode |
+| Website | Yes — DNS record or well-known file (not built) | Yes — URLs on that domain |
+| LinkedIn | **No** — sign-in returns a pairwise id and no public profile URL; reading posts needs partner-only API access | **No** |
+| SN Community | Not investigated | Not investigated |
+
+The general principle, taken from how Yelp and Apple Podcasts do it: verify **control of the asset**, checked against something already on the record — never identity of the person, and never a value the claimant typed during the claim.
 
 ### entity_members
 Who can act for an entity. Entities are never claimed; instead, claimed *people* are linked to them.

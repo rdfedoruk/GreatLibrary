@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { connectYoutube } from '../../lib/auth'
+import { supabase } from '../../lib/supabase'
 import { fetchOwnProfile, type Profile } from '../profiles'
 import {
   addIdentity,
@@ -10,6 +12,7 @@ import {
   removeIdentity,
   requestClaim,
   searchUnclaimedProfiles,
+  verifyYoutubeChannel,
   type Identity,
   type IdentityConflict,
   type MyClaim,
@@ -17,6 +20,10 @@ import {
   type YoutubeMatch,
 } from './api'
 import './claims.css'
+
+// Set just before bouncing to Google so the return trip knows to finish the
+// job. Without it, every later page load would re-run verification.
+const PENDING_VERIFY = 'greatlibrary.pending_youtube_verify'
 
 const PLATFORMS = ['youtube', 'linkedin', 'sn_community', 'podcast', 'website']
 
@@ -105,12 +112,46 @@ function IdentitySection({
   const [conflict, setConflict] = useState<IdentityConflict | null>(null)
   const [conflictClaiming, setConflictClaiming] = useState(false)
   const [conflictRequested, setConflictRequested] = useState(false)
+  const [verifyState, setVerifyState] = useState<'idle' | 'verifying' | 'done'>(
+    'idle',
+  )
+  const [verifyError, setVerifyError] = useState<string | null>(null)
+  const verifyRan = useRef(false)
 
   function reload() {
     fetchIdentities(profile.id).then(setIdentities).catch(() => setIdentities([]))
   }
 
   useEffect(reload, [profile.id])
+
+  // Finishes the trip back from Google: the one-time provider token rides in
+  // on the session, gets handed to the server to confirm against YouTube,
+  // and is never trusted on the client.
+  useEffect(() => {
+    if (verifyRan.current) return
+    if (sessionStorage.getItem(PENDING_VERIFY) !== '1') return
+    verifyRan.current = true
+
+    void (async () => {
+      setVerifyState('verifying')
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.provider_token
+      sessionStorage.removeItem(PENDING_VERIFY)
+      if (!token) {
+        setVerifyState('idle')
+        setVerifyError('Google didn’t hand back a token. Try connecting again.')
+        return
+      }
+      try {
+        await verifyYoutubeChannel(token)
+        setVerifyState('done')
+        reload()
+      } catch (err) {
+        setVerifyState('idle')
+        setVerifyError(err instanceof Error ? err.message : String(err))
+      }
+    })()
+  }, [profile.id])
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -152,9 +193,31 @@ function IdentitySection({
     <section className="claim-section">
       <h3>Your identities</h3>
       <p className="claim-hint">
-        Add the channels and profiles that are yours. This is what a claim
-        gets checked against.
+        Add the channels and profiles that are yours. Only checked ones can
+        pull in your content — typing something in doesn’t prove it’s yours.
       </p>
+
+      <div className="verify-row">
+        <button
+          type="button"
+          onClick={() => {
+            sessionStorage.setItem(PENDING_VERIFY, '1')
+            void connectYoutube()
+          }}
+        >
+          Connect my YouTube channel
+        </button>
+        <span className="claim-hint">
+          Google asks you to sign in to the channel — nothing to type.
+        </span>
+      </div>
+      {verifyState === 'verifying' && (
+        <p className="claim-hint">Checking with YouTube…</p>
+      )}
+      {verifyState === 'done' && (
+        <p className="claim-suggestion">Channel confirmed and added.</p>
+      )}
+      {verifyError && <p className="claim-error">{verifyError}</p>}
 
       {identities && identities.length > 0 && (
         <ul className="identity-list">
@@ -163,6 +226,21 @@ function IdentitySection({
               <div className="identity-row">
                 <span className="identity-platform">{id.platform}</span>
                 <span className="identity-value">{id.identity_value}</span>
+                {id.verified ? (
+                  <span
+                    className="identity-badge identity-badge-verified"
+                    title="Confirmed by the platform"
+                  >
+                    ✓ checked
+                  </span>
+                ) : (
+                  <span
+                    className="identity-badge"
+                    title="You typed this; nothing has confirmed it"
+                  >
+                    not checked
+                  </span>
+                )}
                 <button
                   type="button"
                   className="identity-remove"
@@ -173,7 +251,7 @@ function IdentitySection({
                   ×
                 </button>
               </div>
-              {id.platform === 'youtube' && (
+              {id.platform === 'youtube' && id.verified && (
                 <YoutubeMatchChecker
                   profileId={profile.id}
                   identityValue={id.identity_value}

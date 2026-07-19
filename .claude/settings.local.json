@@ -40,7 +40,13 @@
       "Bash(npx supabase *)",
       "Bash(rm -f gen_err.txt)",
       "Bash(curl -s \"https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DBmLtPoeS3Dk&format=json\")",
-      "Bash(curl -s -D - -o /dev/null \"https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DBmLtPoeS3Dk&format=json\" -H \"Origin: https://greatlibrary.theduke.digital\")"
+      "Bash(curl -s -D - -o /dev/null \"https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DBmLtPoeS3Dk&format=json\" -H \"Origin: https://greatlibrary.theduke.digital\")",
+      "Bash(curl -s \"https://greatlibrary.theduke.digital/assets/index-B7vpCYas.js\")",
+      "Bash(grep -o \"youtu\\\\\\\\\\\\\\\\.be\")",
+      "Bash(curl -s \"https://greatlibrary.theduke.digital/assets/index-B7vpCYas.js\" -o /tmp/bundle.js)",
+      "Read(//tmp/**)",
+      "Bash(curl -s \"https://feeds.transistor.fm/cj-the-duke\")",
+      "Bash(curl -s \"https://feeds.transistor.fm/cj-the-duke\" -o cjfeed.xml)"
     ]
   }
 }

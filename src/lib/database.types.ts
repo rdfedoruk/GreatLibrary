@@ -153,6 +153,8 @@ export type Database = {
           identity_value: string
           platform: string
           profile_id: string
+          verified: boolean
+          verified_at: string | null
         }
         Insert: {
           created_at?: string
@@ -160,6 +162,8 @@ export type Database = {
           identity_value: string
           platform: string
           profile_id: string
+          verified?: boolean
+          verified_at?: string | null
         }
         Update: {
           created_at?: string
@@ -167,6 +171,8 @@ export type Database = {
           identity_value?: string
           platform?: string
           profile_id?: string
+          verified?: boolean
+          verified_at?: string | null
         }
         Relationships: [
           {
