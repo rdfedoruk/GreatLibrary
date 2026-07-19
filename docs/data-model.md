@@ -39,7 +39,15 @@ These rows do two jobs:
 1. **Attribution matching** — a submitted YouTube video's channel ID routes it to the right profile automatically. Never match on `display_name` alone (collides, changes).
 2. **Claim evidence** — when someone claims a profile, these identities are what the moderator is verifying they actually control.
 
-### Verified vs. asserted identities (2026-07-18)
+### Claiming is manual (decided 2026-07-18, supersedes the automation below)
+
+**A claim request goes to the admin, who approves the whole thing in one go, or doesn't.** No automatic verification, no automatic attribution. Identities are *evidence a human reads*, not something the app acts on.
+
+Why: with one admin and near-zero volume, a person beats any automation, and the automated path was solving a scale problem that doesn't exist yet. This also makes the two-pages merge case a non-build — folding them together is just part of what the admin does when approving.
+
+The automation described below was **built, then shelved** — working code is at commit `c69fb16` (`verify-youtube` Edge Function, OAuth channel proof, oEmbed content matching). The `verified` / `verified_at` columns and the shelved function file remain; nothing in the app sets or reads them. Un-shelve when manual review actually stops scaling.
+
+### Verified vs. asserted identities (shelved 2026-07-18 — see above)
 
 Typing "this channel is mine" proves nothing — anyone can type someone else's channel and pull their content onto their own page. So identities come in two kinds:
 

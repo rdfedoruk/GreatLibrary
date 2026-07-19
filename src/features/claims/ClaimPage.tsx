@@ -1,98 +1,27 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { connectYoutube } from '../../lib/auth'
-import { supabase } from '../../lib/supabase'
 import { fetchOwnProfile, type Profile } from '../profiles'
 import {
   addIdentity,
-  attributeSubmission,
   fetchIdentities,
   fetchMyClaims,
-  findYoutubeMatches,
   removeIdentity,
   requestClaim,
   searchUnclaimedProfiles,
-  verifyYoutubeChannel,
   type Identity,
   type IdentityConflict,
   type MyClaim,
   type UnclaimedProfile,
-  type YoutubeMatch,
 } from './api'
 import './claims.css'
 
-// Set just before bouncing to Google so the return trip knows to finish the
-// job. Without it, every later page load would re-run verification.
-const PENDING_VERIFY = 'greatlibrary.pending_youtube_verify'
+// Claiming is manual by design (2026-07-18): a request goes to the admin,
+// who approves the whole thing in one go. Identities here are *evidence for
+// that human*, not something the app acts on automatically. The automated
+// path (YouTube OAuth proof + content matching) is shelved, not deleted —
+// see docs/todo.md § Authors and commit c69fb16.
 
 const PLATFORMS = ['youtube', 'linkedin', 'sn_community', 'podcast', 'website']
-
-function YoutubeMatchChecker({
-  profileId,
-  identityValue,
-}: {
-  profileId: string
-  identityValue: string
-}) {
-  const [matches, setMatches] = useState<YoutubeMatch[] | null>(null)
-  const [checking, setChecking] = useState(false)
-  const [attributed, setAttributed] = useState<Set<string>>(new Set())
-  const [error, setError] = useState<string | null>(null)
-
-  async function handleCheck() {
-    setChecking(true)
-    setError(null)
-    try {
-      const found = await findYoutubeMatches(profileId, identityValue)
-      setMatches(found)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-    } finally {
-      setChecking(false)
-    }
-  }
-
-  async function handleAttribute(submissionId: string) {
-    try {
-      await attributeSubmission(submissionId, profileId)
-      setAttributed((s) => new Set(s).add(submissionId))
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-    }
-  }
-
-  return (
-    <div className="match-checker">
-      <button type="button" onClick={() => void handleCheck()} disabled={checking}>
-        {checking ? 'Checking…' : 'Check for matching videos'}
-      </button>
-      {error && <p className="claim-error">{error}</p>}
-      {matches && matches.length === 0 && (
-        <p className="claim-hint">No unattributed videos found from this channel.</p>
-      )}
-      {matches && matches.length > 0 && (
-        <ul className="match-results">
-          {matches.map((m) => (
-            <li key={m.submissionId}>
-              <a href={m.url} target="_blank" rel="noopener noreferrer">
-                {m.description}
-              </a>
-              {attributed.has(m.submissionId) ? (
-                <span className="claim-status claim-status-approved">
-                  attributed
-                </span>
-              ) : (
-                <button type="button" onClick={() => void handleAttribute(m.submissionId)}>
-                  Attribute to me
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
-}
 
 function IdentitySection({
   profile,
@@ -109,14 +38,10 @@ function IdentitySection({
   const [value, setValue] = useState('')
   const [status, setStatus] = useState<'idle' | 'saving'>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [justAdded, setJustAdded] = useState(false)
   const [conflict, setConflict] = useState<IdentityConflict | null>(null)
   const [conflictClaiming, setConflictClaiming] = useState(false)
   const [conflictRequested, setConflictRequested] = useState(false)
-  const [verifyState, setVerifyState] = useState<'idle' | 'verifying' | 'done'>(
-    'idle',
-  )
-  const [verifyError, setVerifyError] = useState<string | null>(null)
-  const verifyRan = useRef(false)
 
   function reload() {
     fetchIdentities(profile.id).then(setIdentities).catch(() => setIdentities([]))
@@ -124,39 +49,11 @@ function IdentitySection({
 
   useEffect(reload, [profile.id])
 
-  // Finishes the trip back from Google: the one-time provider token rides in
-  // on the session, gets handed to the server to confirm against YouTube,
-  // and is never trusted on the client.
-  useEffect(() => {
-    if (verifyRan.current) return
-    if (sessionStorage.getItem(PENDING_VERIFY) !== '1') return
-    verifyRan.current = true
-
-    void (async () => {
-      setVerifyState('verifying')
-      const { data } = await supabase.auth.getSession()
-      const token = data.session?.provider_token
-      sessionStorage.removeItem(PENDING_VERIFY)
-      if (!token) {
-        setVerifyState('idle')
-        setVerifyError('Google didn’t hand back a token. Try connecting again.')
-        return
-      }
-      try {
-        await verifyYoutubeChannel(token)
-        setVerifyState('done')
-        reload()
-      } catch (err) {
-        setVerifyState('idle')
-        setVerifyError(err instanceof Error ? err.message : String(err))
-      }
-    })()
-  }, [profile.id])
-
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setConflict(null)
+    setJustAdded(false)
     const resolvedPlatform = platform === 'other' ? customPlatform.trim() : platform
     if (!resolvedPlatform || !value.trim()) return
     setStatus('saving')
@@ -166,6 +63,7 @@ function IdentitySection({
         setConflict(result)
       } else {
         setValue('')
+        setJustAdded(true)
         reload()
       }
     } catch (err) {
@@ -191,33 +89,11 @@ function IdentitySection({
 
   return (
     <section className="claim-section">
-      <h3>Your identities</h3>
+      <h3>Your channels and profiles</h3>
       <p className="claim-hint">
-        Add the channels and profiles that are yours. Only checked ones can
-        pull in your content — typing something in doesn’t prove it’s yours.
+        List where you publish. Nobody checks these automatically — they’re
+        what a human looks at when reviewing your claim.
       </p>
-
-      <div className="verify-row">
-        <button
-          type="button"
-          onClick={() => {
-            sessionStorage.setItem(PENDING_VERIFY, '1')
-            void connectYoutube()
-          }}
-        >
-          Connect my YouTube channel
-        </button>
-        <span className="claim-hint">
-          Google asks you to sign in to the channel — nothing to type.
-        </span>
-      </div>
-      {verifyState === 'verifying' && (
-        <p className="claim-hint">Checking with YouTube…</p>
-      )}
-      {verifyState === 'done' && (
-        <p className="claim-suggestion">Channel confirmed and added.</p>
-      )}
-      {verifyError && <p className="claim-error">{verifyError}</p>}
 
       {identities && identities.length > 0 && (
         <ul className="identity-list">
@@ -226,21 +102,6 @@ function IdentitySection({
               <div className="identity-row">
                 <span className="identity-platform">{id.platform}</span>
                 <span className="identity-value">{id.identity_value}</span>
-                {id.verified ? (
-                  <span
-                    className="identity-badge identity-badge-verified"
-                    title="Confirmed by the platform"
-                  >
-                    ✓ checked
-                  </span>
-                ) : (
-                  <span
-                    className="identity-badge"
-                    title="You typed this; nothing has confirmed it"
-                  >
-                    not checked
-                  </span>
-                )}
                 <button
                   type="button"
                   className="identity-remove"
@@ -251,12 +112,6 @@ function IdentitySection({
                   ×
                 </button>
               </div>
-              {id.platform === 'youtube' && id.verified && (
-                <YoutubeMatchChecker
-                  profileId={profile.id}
-                  identityValue={id.identity_value}
-                />
-              )}
             </li>
           ))}
         </ul>
@@ -284,22 +139,23 @@ function IdentitySection({
           onChange={(e) => setValue(e.target.value)}
         />
         <button type="submit" disabled={status === 'saving'}>
-          Add
+          {status === 'saving' ? 'Adding…' : 'Add'}
         </button>
+        {justAdded && <span className="identity-added">Added</span>}
       </form>
 
       {error && <p className="claim-error">{error}</p>}
 
       {conflict && (
         <p className="claim-suggestion">
-          That identity is already on{' '}
+          That’s already listed on{' '}
           <Link to={`/profile/${conflict.profileSlug}`}>
             {conflict.profileName}
           </Link>
           {conflict.claimable ? (
             <>
               {' '}
-              — unclaimed. Looks like it might be you.{' '}
+              — a page nobody has claimed yet. If that’s you:{' '}
               {conflictRequested ? (
                 'Claim requested.'
               ) : (
@@ -313,7 +169,7 @@ function IdentitySection({
               )}
             </>
           ) : (
-            "'s page, which is already claimed by someone else."
+            "'s page, which someone has already claimed."
           )}
         </p>
       )}
@@ -356,10 +212,10 @@ function ClaimSearchSection({
 
   return (
     <section className="claim-section">
-      <h3>Or search for your page</h3>
+      <h3>Find your page</h3>
       <p className="claim-hint">
-        If content was submitted about you before you joined, it may already
-        have an unclaimed page.
+        If your work was submitted here before you joined, it may already have
+        a page waiting.
       </p>
       <input
         className="claim-search-input"
@@ -401,7 +257,10 @@ function MyClaimsSection({ userId, refreshKey }: { userId: string; refreshKey: n
 
   return (
     <section className="claim-section">
-      <h3>Your claim requests</h3>
+      <h3>Your requests</h3>
+      <p className="claim-hint">
+        Each one is reviewed by hand. You’ll keep your account either way.
+      </p>
       <ul className="claim-results">
         {claims.map((c) => (
           <li key={c.id}>

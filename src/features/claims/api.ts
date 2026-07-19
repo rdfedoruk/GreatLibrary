@@ -4,7 +4,6 @@ export interface Identity {
   id: string
   platform: string
   identity_value: string
-  verified: boolean
 }
 
 export interface IdentityConflict {
@@ -31,7 +30,7 @@ export interface MyClaim {
 export async function fetchIdentities(profileId: string): Promise<Identity[]> {
   const { data, error } = await supabase
     .from('profile_identities')
-    .select('id, platform, identity_value, verified')
+    .select('id, platform, identity_value')
     .eq('profile_id', profileId)
     .order('platform')
 
@@ -39,59 +38,41 @@ export async function fetchIdentities(profileId: string): Promise<Identity[]> {
   return data
 }
 
-// Hands the one-time Google token to the verify-youtube function, which
-// asks YouTube which channel it owns and records it. Verification is only
-// ever set server-side — see supabase/functions/verify-youtube/index.ts.
-export async function verifyYoutubeChannel(
-  providerToken: string,
-): Promise<{ channel: string; title: string | null }> {
-  const { data, error } = await supabase.functions.invoke('verify-youtube', {
-    body: { providerToken },
-  })
-  if (error) {
-    // Edge function errors carry the useful message in the response body.
-    const detail = await (error as { context?: Response }).context
-      ?.json()
-      .catch(() => null)
-    throw new Error(detail?.error ?? error.message)
-  }
-  if (data?.error) throw new Error(data.error)
-  return { channel: data.channel, title: data.title }
-}
-
-// Adds an identity to a profile. profile_identities has a global unique
-// constraint on (platform, identity_value) — the same channel/handle can't
-// belong to two profiles. That collision doubles as the matching signal:
-// if the insert fails because it's already attached elsewhere, we look up
-// who has it and report whether it's claimable.
+// Adds an identity to a profile, first checking whether another profile
+// already lists it. Two profiles listing the same channel is allowed at the
+// database level now (unverified identities prove nothing, so they mustn't
+// lock the real owner out) — but it's still worth telling the user, because
+// an unclaimed page listing your channel is probably the page you're
+// looking for.
 export async function addIdentity(
   profileId: string,
   platform: string,
   identityValue: string,
 ): Promise<IdentityConflict | null> {
-  const { error } = await supabase
+  const { data: existing, error: lookupError } = await supabase
     .from('profile_identities')
-    .insert({ profile_id: profileId, platform, identity_value: identityValue })
+    .select('profile_id, profiles ( id, display_name, slug, linked_user_id )')
+    .eq('platform', platform)
+    .eq('identity_value', identityValue)
+    .neq('profile_id', profileId)
+    .limit(1)
+    .maybeSingle()
+  if (lookupError) throw lookupError
 
-  if (!error) return null
-
-  if (error.code === '23505') {
-    const { data: owner, error: lookupError } = await supabase
-      .from('profile_identities')
-      .select('profiles ( id, display_name, slug, linked_user_id )')
-      .eq('platform', platform)
-      .eq('identity_value', identityValue)
-      .single()
-    if (lookupError) throw lookupError
+  if (existing?.profiles) {
     return {
-      profileId: owner.profiles!.id,
-      profileName: owner.profiles!.display_name,
-      profileSlug: owner.profiles!.slug,
-      claimable: owner.profiles!.linked_user_id === null,
+      profileId: existing.profiles.id,
+      profileName: existing.profiles.display_name,
+      profileSlug: existing.profiles.slug,
+      claimable: existing.profiles.linked_user_id === null,
     }
   }
 
-  throw new Error(error.message)
+  const { error } = await supabase
+    .from('profile_identities')
+    .insert({ profile_id: profileId, platform, identity_value: identityValue })
+  if (error) throw new Error(error.message)
+  return null
 }
 
 export async function removeIdentity(identityId: string): Promise<void> {
@@ -134,91 +115,6 @@ export async function requestClaim(
     }
     throw new Error(error.message)
   }
-}
-
-export interface YoutubeMatch {
-  submissionId: string
-  description: string
-  url: string
-}
-
-function normalizeUrl(url: string): string {
-  return url
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, '')
-    .replace(/^www\./, '')
-    .replace(/\/$/, '')
-}
-
-// Matches on the URL itself, not the `source_site` column — source_site
-// records which *submission handler* produced the row (manual form vs. the
-// not-yet-built browser plugin), not what platform the linked content is
-// on. Every submission today comes through the manual form, so it's always
-// 'manual' even for an obvious YouTube link; filtering on source_site would
-// silently exclude every real match.
-const YOUTUBE_URL = /(^|\.)youtube\.com$|(^|\.)youtu\.be$/
-
-function isYoutubeUrl(url: string): boolean {
-  try {
-    return YOUTUBE_URL.test(new URL(url).hostname)
-  } catch {
-    return false
-  }
-}
-
-// Finds already-submitted YouTube videos whose channel matches the given
-// identity, that aren't already attributed to this profile. Calls
-// YouTube's public oEmbed endpoint directly from the browser — it sends
-// permissive CORS headers, so no server-side function is needed. Scoped to
-// YouTube only: it's the one platform with a free, keyless way to resolve
-// a video URL back to its channel.
-export async function findYoutubeMatches(
-  profileId: string,
-  channelIdentityValue: string,
-): Promise<YoutubeMatch[]> {
-  const target = normalizeUrl(channelIdentityValue)
-
-  const { data: submissions, error } = await supabase
-    .from('submissions')
-    .select('id, url, description, submission_attributions ( profile_id )')
-
-  if (error) throw error
-
-  const unattributed = submissions
-    .filter((s) => isYoutubeUrl(s.url))
-    .filter(
-      (s) => !s.submission_attributions.some((a) => a.profile_id === profileId),
-    )
-
-  const results = await Promise.all(
-    unattributed.map(async (s): Promise<YoutubeMatch | null> => {
-      try {
-        const res = await fetch(
-          `https://www.youtube.com/oembed?url=${encodeURIComponent(s.url)}&format=json`,
-        )
-        if (!res.ok) return null
-        const json = (await res.json()) as { author_url?: string }
-        if (!json.author_url) return null
-        if (normalizeUrl(json.author_url) !== target) return null
-        return { submissionId: s.id, description: s.description, url: s.url }
-      } catch {
-        return null
-      }
-    }),
-  )
-
-  return results.filter((r): r is YoutubeMatch => r !== null)
-}
-
-export async function attributeSubmission(
-  submissionId: string,
-  profileId: string,
-): Promise<void> {
-  const { error } = await supabase
-    .from('submission_attributions')
-    .insert({ submission_id: submissionId, profile_id: profileId })
-  if (error) throw new Error(error.message)
 }
 
 export async function fetchMyClaims(userId: string): Promise<MyClaim[]> {
