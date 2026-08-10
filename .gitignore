@@ -1,5 +1,10 @@
 # Environment (publishable key is safe to expose, but keep env files out of git anyway)
 .env
+.env.test
+
+# Test output
+test-results
+playwright-report
 
 # Handoff archives
 *.zip
@@ -25,6 +30,7 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
+.obsidian
 .DS_Store
 *.suo
 *.ntvs*

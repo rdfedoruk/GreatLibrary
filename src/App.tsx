@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import './App.css'
 import { signInWithEmail, signInWithGoogle, signOut, useSession } from './lib/auth'
-import { SubmissionList, SubmitForm } from './features/submissions'
+import {
+  SubmissionList,
+  SubmissionPage,
+  SubmitForm,
+} from './features/submissions'
 import { ProfilePage } from './features/profiles'
 import { ClaimPage } from './features/claims'
 
@@ -110,6 +114,10 @@ function App() {
               onSubmitted={() => setRefreshKey((k) => k + 1)}
             />
           }
+        />
+        <Route
+          path="/submission/:id"
+          element={<SubmissionPage currentUserId={session?.user.id ?? null} />}
         />
         <Route
           path="/profile/:slug"

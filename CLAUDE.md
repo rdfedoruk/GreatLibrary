@@ -22,6 +22,7 @@ Andrew is the **product owner, not a full-stack developer.** He decides what get
 
 ## Reference Docs — read before working in these areas
 
+- `docs/work/README.md` — how epics, features, and stories are tracked. Read before creating or updating any work item.
 - `docs/data-model.md` — schema for submissions, tags, users, votes, comments, content_creators, claims. Read before touching anything schema-related.
 - `docs/browser-plugin-spec.md` — per-site extraction rules for LinkedIn, YouTube, ServiceNow Community. Read before building or modifying any site handler.
 - `docs/build-order.md` — phased build plan and what supervision level each phase needs.
@@ -38,6 +39,19 @@ The goal: any single feature (votes, comments, claims, etc.) can be rewritten or
 - **Schema changes only via numbered migration files**, applied in order, never edited after the fact.
 - **Existing tests are the cross-feature regression fence.** When building feature B, a failure in feature A's tests means the seam was violated — fix the coupling, don't just patch the test.
 - **No premature abstraction.** No generic entity managers, service layers, or configurability for things that don't vary yet. Feature folders + DB constraints + the narrow plugin channel *is* the architecture; anything fancier needs a reason and a flag to the user.
+
+## Tracking Work
+
+Work items live in `docs/work/` — one markdown file each, linked to one another so the whole thing renders as a graph in Obsidian. `docs/work/README.md` is the entry point and explains the folders, the four status words, and how to add an item. Read it before creating or editing anything in there.
+
+- **Before building, look for the story.** If a task has a story file, read it and work to its "Done when" list. If it doesn't, ask whether to write one first — don't create epics or stories unprompted, and don't build against an imagined one.
+- **Status is Andrew's call, not a side effect of committing.** When work lands, say so and propose the status change; don't silently flip a story from *Not started* to *Working*.
+- **Only four status words exist:** Working, By hand only, Half-built, Not started. Don't invent a fifth.
+- **Links go both ways.** A new story names its epic in the properties block, *and* gets added to that epic's `## Stories` list. One without the other is a half-made link.
+- **Filenames are the IDs** — kebab-case and descriptive (`capture-who-made-this.md`). Never number them; numbering is what broke the old `epics.md`.
+- **Every story needs acceptance criteria.** A checklist under `## Acceptance criteria` of things you could check by using the site — true or false, no judgment call. Cover the happy path plus the edge cases and error states that matter, not just the ideal case. A story without these isn't ready to build against; see `docs/work/_templates/story.md`.
+
+**This folder now holds the real epic/story graph.** `docs/epics.md` has been fully migrated in and deleted. `docs/todo.md`, `docs/build-order.md`, and `docs/current-state.md` are still live and not yet migrated — keep reading them for context, and treat `docs/current-state.md` as the tiebreaker for what actually works today.
 
 ## Working Conventions
 

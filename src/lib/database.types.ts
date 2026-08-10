@@ -76,6 +76,7 @@ export type Database = {
           body: string
           comment_type: Database["public"]["Enums"]["comment_type"]
           created_at: string
+          edited_at: string | null
           id: string
           submission_id: string
           user_id: string
@@ -84,6 +85,7 @@ export type Database = {
           body: string
           comment_type?: Database["public"]["Enums"]["comment_type"]
           created_at?: string
+          edited_at?: string | null
           id?: string
           submission_id: string
           user_id: string
@@ -92,6 +94,7 @@ export type Database = {
           body?: string
           comment_type?: Database["public"]["Enums"]["comment_type"]
           created_at?: string
+          edited_at?: string | null
           id?: string
           submission_id?: string
           user_id?: string
