@@ -9,11 +9,12 @@ status: Not started
 submissions and get content about them removed — comments, and both
 paths for requesting a takedown.
 
-**Where it stands.** Database tables and some permission rules exist from
-the very first migration and have barely been touched since. No feature
-folder, no component, no code path anywhere in `src/` touches any of
-these. This looks like Phase 2 work that was designed at the schema level
-and never picked up.
+**Where it stands.** Comments have been picked up: `src/features/comments/`
+exists, threads expand on each submission card, and authors can edit and
+delete their own. The two removal paths have not — their tables and some
+permission rules have existed since the very first migration, but no
+feature folder, component, or code path anywhere in `src/` touches them.
+That half was designed at the schema level and never built.
 
 ## Stories
 
@@ -27,8 +28,9 @@ and never picked up.
 - **Does an open (non-verified) takedown request require an account?**
   The database currently has *no insert policy at all* for that path — it
   is unconditionally blocked until this is decided.
-- **Is comments still wanted**, given the table has sat unused since the
-  very first migration?
+
+**Decided 2026-08-10:** comments are still wanted, and authors can edit
+and delete their own. See [[comment-on-a-submission]].
 
 ## Related
 

@@ -27,6 +27,7 @@ export interface SubmissionListItem {
   tags: SubmissionTag[]
   score: number
   userVote: VoteValue | null
+  commentCount: number
 }
 
 export interface SubmissionFilter {
@@ -94,7 +95,8 @@ export async function fetchSubmissions(
        submitter:profiles!submissions_submitted_by_fkey ( display_name, slug ),
        submission_attributions ( profiles ( display_name, slug ) ),
        submission_tags ( tags ( id, dimension, name ) ),
-       votes ( user_id, value )`,
+       votes ( user_id, value ),
+       comments ( count )`,
     )
     .order('created_at', { ascending: false })
 
@@ -141,6 +143,9 @@ export async function fetchSubmissions(
       tags: row.submission_tags.flatMap((st) => st.tags ?? []),
       score: row.votes.reduce((sum, v) => sum + v.value, 0),
       userVote: (own?.value as VoteValue | undefined) ?? null,
+      // Only the count comes back with the list; the comments themselves
+      // load when a thread is actually opened.
+      commentCount: row.comments[0]?.count ?? 0,
     }
   })
 }

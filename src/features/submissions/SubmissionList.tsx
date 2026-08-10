@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { VoteControl } from '../votes'
+import { CommentThread } from '../comments'
 import {
   fetchSubmissions,
   type SubmissionFilter,
@@ -90,6 +91,11 @@ function SubmissionCard({
             ))}
           </ul>
         )}
+        <CommentThread
+          submissionId={item.id}
+          initialCount={item.commentCount}
+          currentUserId={currentUserId}
+        />
       </div>
     </article>
   )
