@@ -141,7 +141,7 @@ npm run test:e2e # journeys only — starts the dev server itself
 - [[public-profiles]] — *Working*
 - [[claiming-your-page]] — *Half-built*
 - [[attribution-and-verification]] — *Not started*
-- [[moderation-and-cleanup]] — *Not started*
+- [[moderation-and-cleanup]] — *Half-built*
 - [[keeping-content-fresh]] — *Not started*
 
 `example-epic` and `example-story` are the original throwaway placeholders

@@ -1,6 +1,6 @@
 ---
 type: story
-status: Not started
+status: Working
 epic: "[[moderation-and-cleanup]]"
 blocked-by:
 ---

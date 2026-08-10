@@ -1,6 +1,6 @@
 ---
 type: epic
-status: Not started
+status: Half-built
 ---
 
 # Moderation & cleanup
@@ -18,7 +18,7 @@ That half was designed at the schema level and never built.
 
 ## Stories
 
-- [[comment-on-a-submission]] — *Not started*
+- [[comment-on-a-submission]] — *Working*
 - [[file-a-verified-self-removal]] — *Not started*
 - [[file-an-open-takedown-request]] — *Not started*
 - [[name-entity-members]] — *Not started*
