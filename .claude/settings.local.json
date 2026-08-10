@@ -63,7 +63,9 @@
       "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{try{const j=JSON.parse\\(d\\);const p=j.projects||j;p.forEach\\(x=>console.log\\(x.name,'|',x.ref,'|',x.status,'| linked:',x.linked,'| created:',x.created_at\\)\\)}catch\\(e\\){console.log\\(d\\)}}\\)\")",
       "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{try{const j=JSON.parse\\(d\\);j.forEach\\(k=>console.log\\(k.name,'->',String\\(k.api_key\\).slice\\(0,12\\)+'…'\\)\\)}catch\\(e\\){console.log\\('RAW:',d.slice\\(0,300\\)\\)}}\\)\")",
       "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const j=JSON.parse\\(d\\);const p=\\(j.projects||j\\).find\\(x=>x.name==='GreatLibraryTesting'\\);console.log\\('region:',p.region,'host:',p.database.host\\)}\\)\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(npx supabase db push:*)",
+      "Bash(gh pr merge:*)"
     ]
   }
 }

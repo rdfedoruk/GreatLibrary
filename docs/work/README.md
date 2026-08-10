@@ -160,7 +160,7 @@ npm run test:e2e # journeys only — starts the dev server itself
 - [[browsing-and-voting]] — *Working*
 - [[public-profiles]] — *Working*
 - [[claiming-your-page]] — *Half-built*
-- [[attribution-and-verification]] — *Not started*
+- [[attribution-and-verification]] — *Half-built*
 - [[moderation-and-cleanup]] — *Half-built*
 - [[keeping-content-fresh]] — *Not started*
 
