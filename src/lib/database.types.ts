@@ -430,6 +430,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_unclaimed_profile: {
+        Args: { p_display_name: string }
+        Returns: {
+          created_at: string
+          display_name: string
+          id: string
+          linked_user_id: string | null
+          merged_into: string | null
+          slug: string
+          type: Database["public"]["Enums"]["profile_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       generate_profile_slug: { Args: { name: string }; Returns: string }
       slugify: { Args: { input: string }; Returns: string }
     }

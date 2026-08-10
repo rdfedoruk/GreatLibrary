@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { CommentThread } from '../comments'
+import { AttributionEditor } from './AttributionEditor'
 import { SubmissionCard } from './SubmissionCard'
-import { fetchSubmission, type SubmissionListItem } from './api'
+import { fetchSubmission, type ProfileRef, type SubmissionListItem } from './api'
 import './submissions.css'
 
 export function SubmissionPage({
@@ -48,6 +49,15 @@ export function SubmissionPage({
     )
   }
 
+  // Signup gives every member a profile whose id is their auth id, so the
+  // two compare directly (see migration 3).
+  const isSubmitter = currentUserId !== null && item.submitter.id === currentUserId
+
+  const setCreators = (creators: ProfileRef[]) =>
+    setItem((prev) =>
+      prev === null || prev === 'loading' ? prev : { ...prev, creators },
+    )
+
   return (
     <div className="submission-page">
       <p className="submission-back">
@@ -58,6 +68,13 @@ export function SubmissionPage({
         currentUserId={currentUserId}
         showDiscussLink={false}
       />
+      {isSubmitter && (
+        <AttributionEditor
+          submissionId={item.id}
+          creators={item.creators}
+          onChanged={setCreators}
+        />
+      )}
       <CommentThread submissionId={item.id} currentUserId={currentUserId} />
     </div>
   )

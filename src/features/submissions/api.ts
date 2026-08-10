@@ -12,6 +12,7 @@ export interface SubmissionTag {
 }
 
 export interface ProfileRef {
+  id: string
   name: string
   slug: string
 }
@@ -81,9 +82,41 @@ export async function createSubmission(
   }
 }
 
+// Credits a profile with making this submission's content — separate from
+// who submitted the link. The permission rule is the database's: the
+// submitter of this submission, or a profile attributing itself.
+export async function attributeProfile(
+  submissionId: string,
+  profileId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('submission_attributions')
+    .insert({ submission_id: submissionId, profile_id: profileId })
+
+  if (error) {
+    if (error.code === '23505') {
+      throw new Error('That page is already credited on this entry.')
+    }
+    throw new Error(error.message)
+  }
+}
+
+export async function removeAttribution(
+  submissionId: string,
+  profileId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('submission_attributions')
+    .delete()
+    .eq('submission_id', submissionId)
+    .eq('profile_id', profileId)
+
+  if (error) throw new Error(error.message)
+}
+
 const SELECT = `id, url, description, source_site, created_at,
-   submitter:profiles!submissions_submitted_by_fkey ( display_name, slug ),
-   submission_attributions ( profiles ( display_name, slug ) ),
+   submitter:profiles!submissions_submitted_by_fkey ( id, display_name, slug ),
+   submission_attributions ( profiles ( id, display_name, slug ) ),
    submission_tags ( tags ( id, dimension, name ) ),
    votes ( user_id, value ),
    comments ( count )`
@@ -94,9 +127,9 @@ type SubmissionRow = {
   description: string
   source_site: SourceSite
   created_at: string
-  submitter: { display_name: string; slug: string }
+  submitter: { id: string; display_name: string; slug: string }
   submission_attributions: {
-    profiles: { display_name: string; slug: string } | null
+    profiles: { id: string; display_name: string; slug: string } | null
   }[]
   submission_tags: { tags: SubmissionTag | null }[]
   votes: { user_id: string; value: number }[]
@@ -117,12 +150,19 @@ function toItem(
     source_site: row.source_site,
     created_at: row.created_at,
     submitter: {
+      id: row.submitter.id,
       name: row.submitter.display_name,
       slug: row.submitter.slug,
     },
     creators: row.submission_attributions.flatMap((a) =>
       a.profiles
-        ? [{ name: a.profiles.display_name, slug: a.profiles.slug }]
+        ? [
+            {
+              id: a.profiles.id,
+              name: a.profiles.display_name,
+              slug: a.profiles.slug,
+            },
+          ]
         : [],
     ),
     tags: row.submission_tags.flatMap((st) => st.tags ?? []),

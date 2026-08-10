@@ -24,8 +24,8 @@ test.describe('the home page, signed out', () => {
     await expect(page.getByRole('button', { name: 'Submit content' })).toHaveCount(0)
   })
 
-  // Read-only on purpose: the dev server points at the live database, so this
-  // walks to the discussion and stops short of posting anything.
+  // Signed out there is nothing to post with, so this walks to the discussion
+  // and checks what a visitor is and isn't offered.
   test('leads from an entry to its discussion', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByText('Loading the library…')).toHaveCount(0, { timeout: 15000 })

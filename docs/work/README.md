@@ -73,6 +73,19 @@ Every new journey test is a permanent maintenance cost, so the list stays
 small on purpose. If a story's criteria are already covered by an
 existing journey, don't add a second one.
 
+Signing a test browser in was the piece that used to be missing, which is
+why every journey was a signed-out one. `tests/e2e/helpers.ts` now mints
+a real session through the API and writes it into the browser before the
+app starts, because neither Google nor a magic-link can be completed by a
+test. `signIn(page)`, `seedSubmission()` and `cleanUp()` in an `afterAll`
+are the whole harness.
+
+Anything a journey creates has to be taken back out in that `cleanUp`.
+Deleting the login is **not** enough: since migration 3 a profile
+outlives its login (`linked_user_id` is *set null*, not cascade) and a
+submission's `submitted_by` has no cascade at all. Order is submissions,
+then profiles, then logins.
+
 **3. Individual screen pieces — not tested, on purpose.**
 
 No tests for buttons, layout, styling, or single components. They change
@@ -86,6 +99,13 @@ Against the **GreatLibraryTesting** Supabase project — same migrations,
 throwaway data, nothing real in it. Same idea as a sub-prod instance:
 migrations get rehearsed there before they touch the live database,
 which is worth having regardless of tests.
+
+That now includes the journeys. They used to run against a dev server
+inheriting `.env`, which is **production** — survivable only while every
+journey was read-only, and a way to write to the live site the moment one
+wasn't. Playwright now starts its own dev server on port **5174** with
+the test project's keys, and never reuses one already running, because a
+`npm run dev` on 5173 is pointed at production.
 
 Its URL and keys live in `.env.test`, which is gitignored and never
 committed. The tests refuse to run at all if that file points at the
