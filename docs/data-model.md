@@ -19,11 +19,14 @@ Plain-English version of the whole design (canonical explanation lives in `decis
 The single public-identity table. Replaces both the old `profiles` and `content_creators` tables.
 
 - `id`
-- `display_name`
+- `display_name` — must contain at least one non-whitespace character (2026-08-10).
+- `slug` — unique, readable URL label (`robert-fedoruk`, then `-2`, `-3` on collision). Generated from the display name; the permanent identity is `id`, so a slug can change.
 - `type` — enum: `person` / `entity`. Drives UI treatment (entity chips/pages render distinctly) — not a behavioral fork in the schema, with one exception: only `person` profiles can be claimed.
 - `linked_user_id` → Supabase `auth.users.id`, nullable. Set when a person claims the profile (or immediately at signup for a fresh member). **Always null for entities — permanently.** One auth user links to at most one profile.
 - `merged_into` → `profiles.id`, nullable. Tombstone pointer for the duplicate-page case (see Merging below). A profile with this set is retired; anything resolving it should follow the pointer.
 - `created_at`
+
+**Who can create one (2026-08-10).** Signup creates a member's own page. Beyond that, any signed-in member can create an *unclaimed person* page — never one attached to a login, never one born already-merged. This is what makes "a page can exist before its person joins" actually true rather than aspirational: it's how a submitter credits a creator who has never heard of the site. Entity pages are still a hand edit, as is merging duplicates. Creation goes through `create_unclaimed_profile()` so the slug is derived server-side and two people adding the same name at once can't collide.
 
 ### profile_identities
 How we know which platform accounts belong to a profile. Replaces the earlier `creator_identities` name and, before that, the fixed identity columns (`youtube_channel_id`, etc.), which couldn't scale — every new platform meant a migration, and one creator can hold many identities.
@@ -118,6 +121,8 @@ Who actually made a submission's content — many-to-many (replaces the interim 
 - `profile_id` → `profiles.id`
 
 **No role field** (author / publisher / featured — considered, dropped: see removal_requests below for why it turned out unnecessary). Attribution works like tagging: the submitter picks whichever profiles they recognize, can miss someone, and it's correctable later — unlike `submitted_by`, which is permanently fixed.
+
+**Who can write one.** The submitter of that submission, or a profile attributing *itself* (which additionally requires a verified identity, and is unreachable today — nothing in the app can grant verification). Rows can be deleted by the submitter of the submission, added 2026-08-10 so a mistyped credit isn't permanent. That delete rule is deliberately as wide as the insert rule, which means a submitter can also strip a self-attribution someone else added — worth revisiting when self-attribution gets a UI.
 
 ### votes
 **Resolved (2026-07-17): upvote/downvote net score** (not star rating, not upvote-only). One vote per profile per submission; `value` is +1 or -1, displayed as a net score. The downvote doubles as a light "wrong/outdated" quality signal alongside moderation.

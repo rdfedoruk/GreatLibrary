@@ -10,11 +10,15 @@ submissions and get content about them removed — comments, and both
 paths for requesting a takedown.
 
 **Where it stands.** Comments have been picked up: `src/features/comments/`
-exists, threads expand on each submission card, and authors can edit and
-delete their own. The two removal paths have not — their tables and some
-permission rules have existed since the very first migration, but no
-feature folder, component, or code path anywhere in `src/` touches them.
-That half was designed at the schema level and never built.
+exists, each entry has a Discuss link to its own page at
+`/submission/:id` carrying the thread, and authors can edit and delete
+their own. (They were originally meant to expand inline on the feed;
+that couldn't work, because an entry's title links out to the content, so
+a thread on the card had no way in.) The two removal paths have not been
+picked up — their tables and some permission rules have existed since the
+very first migration, but no feature folder, component, or code path
+anywhere in `src/` touches them. That half was designed at the schema
+level and never built.
 
 ## Stories
 

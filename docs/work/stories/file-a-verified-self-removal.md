@@ -2,7 +2,7 @@
 type: story
 status: Not started
 epic: "[[moderation-and-cleanup]]"
-blocked-by: "[[attribute-a-profile-to-a-submission]]"
+blocked-by:
 ---
 
 # File a verified self-removal
@@ -36,11 +36,13 @@ through an open/unverified dispute process.
 unrelated despite the similar wording. The row-level security policy for
 this exact case already exists (`linked people can file verified
 self-removals`) and covers both a directly-linked person and a claimed
-member of an entity via `entity_members`. Nothing in `src/` calls it. Practically, this story is
-also gated on attribution existing at all (see
-[[attribute-a-profile-to-a-submission]]) — there's nothing to request
-removal of "as the verified creator" until a submission can be attributed
-to someone in the first place.
+member of an entity via `entity_members`. Nothing in `src/` calls it.
+
+This used to be blocked on attribution existing at all — there was
+nothing to request removal of "as the verified creator" until a
+submission could be attributed to someone. That cleared on 2026-08-10
+(see [[attribute-a-profile-to-a-submission]]), so the only thing left
+between this and buildable is the UI.
 
 ## Related
 

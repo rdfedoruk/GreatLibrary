@@ -38,6 +38,12 @@ path is unreachable regardless of whether a UI is built for it. Building
 the UI without first closing that gap would ship a button that always
 fails.
 
+One thing to settle when this is built: migration 9 lets a submitter
+delete *any* attribution on their own submission, including one a
+verified profile added to itself. That was fine while this story didn't
+exist — it means someone could quietly strip a creator's own credit off
+their post. See [[attribute-a-profile-to-a-submission]].
+
 ## Related
 
 - [[attribution-and-verification]]

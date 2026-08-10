@@ -156,12 +156,20 @@ checking in first.
   (first server code in the project — browsers block cross-origin fetches).
   **DECISION NEEDED:** does the title become a new `submissions` column, or
   just a suggestion pasted into the description? Schema change, flag it.
-- **Creator attribution on manual submissions** — currently not captured.
-  Superseded by the Authors § co-created content redesign: submitter picks
+- **Creator attribution on manual submissions** — BUILT and live
+  (2026-08-10), close to the shape described here: the submitter picks
   creators from an autocomplete (same pattern as tag selection), can miss
-  someone, correctable later. Auto-deriving a first guess from the URL
-  (YouTube oEmbed gives the channel) is a nice-to-have on top of that, not
-  required. The oEmbed part depends on the title-fetch edge function above.
+  someone, and can correct it later. Two differences worth knowing. It
+  lives on the submission's own page rather than the submit form, so
+  entries already in the library can be credited too. And unlike tags, a
+  name that isn't in the list *does* create a new page — creators mostly
+  haven't signed up, so a closed vocabulary would have made the feature
+  useless. Duplicates and misspellings are the accepted cost; merging
+  them is still a hand edit. See
+  `docs/work/stories/attribute-a-profile-to-a-submission.md`.
+  - Still open: auto-deriving a first guess from the URL (YouTube oEmbed
+    gives the channel) — a nice-to-have on top, not required. Depends on
+    the title-fetch edge function above.
 - **DECISION NEEDED — submission description source:** user-written at
   submission time vs. auto-suggested from page metadata with edit. Leaning
   auto-suggest for completion rate, not locked in.
@@ -200,8 +208,10 @@ checking in first.
   (Phase 4).
 - **Normalization: content attributions** — admin-side correction of
   misattributed content. Same mechanism as regular attribution now (editing
-  `submission_creators`), just admin-initiated instead of submitter-initiated
-  — no longer a separate design question.
+  `submission_attributions`), just admin-initiated instead of
+  submitter-initiated — no longer a separate design question. Now that
+  members can create creator pages freely, the real admin job here is
+  merging duplicates of the same person, which is still hand-written SQL.
 - **Normalization: proposed tags** — admin side of the tag-proposal queue
   above.
 
