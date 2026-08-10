@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   COMMENT_TYPES,
@@ -10,13 +10,6 @@ import {
   type CommentType,
 } from './api'
 import './comments.css'
-
-// With nothing to read, the label is only an invitation to people who can
-// actually take it up.
-function countLabel(n: number, canPost: boolean): string {
-  if (n === 0) return canPost ? 'Comment' : 'No comments'
-  return n === 1 ? '1 comment' : `${n} comments`
-}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -178,38 +171,31 @@ function CommentRow({
 
 export function CommentThread({
   submissionId,
-  initialCount,
   currentUserId,
 }: {
   submissionId: string
-  initialCount: number
   currentUserId: string | null
 }) {
-  const [open, setOpen] = useState(false)
   const [items, setItems] = useState<CommentItem[] | null>(null)
-  const [count, setCount] = useState(initialCount)
   const [error, setError] = useState<string | null>(null)
 
   const [body, setBody] = useState('')
   const [commentType, setCommentType] = useState<CommentType>('comment')
   const [posting, setPosting] = useState(false)
 
-  // Comments load the first time the thread is opened, not with the list —
-  // most cards never get expanded.
-  const toggle = () => {
-    const next = !open
-    setOpen(next)
-    if (next && items === null) {
-      fetchComments(submissionId)
-        .then((data) => {
-          setItems(data)
-          setCount(data.length)
-        })
-        .catch((err: unknown) =>
-          setError(err instanceof Error ? err.message : String(err)),
-        )
+  useEffect(() => {
+    let cancelled = false
+    fetchComments(submissionId)
+      .then((data) => {
+        if (!cancelled) setItems(data)
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err))
+      })
+    return () => {
+      cancelled = true
     }
-  }
+  }, [submissionId])
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault()
@@ -221,7 +207,6 @@ export function CommentThread({
     postComment(submissionId, currentUserId, body, commentType)
       .then((created) => {
         setItems((prev) => [...(prev ?? []), created])
-        setCount((n) => n + 1)
         setBody('')
         setCommentType('comment')
       })
@@ -236,81 +221,71 @@ export function CommentThread({
       (prev ?? []).map((c) => (c.id === next.id ? next : c)),
     )
 
-  const dropItem = (id: string) => {
+  const dropItem = (id: string) =>
     setItems((prev) => (prev ?? []).filter((c) => c.id !== id))
-    setCount((n) => Math.max(0, n - 1))
-  }
 
   return (
-    <div className="comment-thread">
-      <button
-        type="button"
-        className="comment-toggle"
-        aria-expanded={open}
-        onClick={toggle}
-      >
-        {countLabel(count, currentUserId !== null)} {open ? '▾' : '▸'}
-      </button>
+    <section className="comment-thread" aria-label="Discussion">
+      <h3 className="comment-heading">
+        Discussion{items !== null && ` (${items.length})`}
+      </h3>
 
-      {open && (
-        <div className="comment-panel">
-          {error && <p className="comment-error">{error}</p>}
+      <div className="comment-panel">
+        {error && <p className="comment-error">{error}</p>}
 
-          {items === null && !error && (
-            <p className="comment-status">Loading…</p>
-          )}
+        {items === null && !error && <p className="comment-status">Loading…</p>}
 
-          {items !== null && items.length > 0 && (
-            <ul className="comment-list">
-              {items.map((item) => (
-                <CommentRow
-                  key={item.id}
-                  item={item}
-                  isMine={item.authorId === currentUserId}
-                  onChanged={replaceItem}
-                  onRemoved={() => dropItem(item.id)}
-                />
-              ))}
-            </ul>
-          )}
+        {items !== null && items.length > 0 && (
+          <ul className="comment-list">
+            {items.map((item) => (
+              <CommentRow
+                key={item.id}
+                item={item}
+                isMine={item.authorId === currentUserId}
+                onChanged={replaceItem}
+                onRemoved={() => dropItem(item.id)}
+              />
+            ))}
+          </ul>
+        )}
 
-          {items !== null && items.length === 0 && (
-            <p className="comment-status">
-              {currentUserId !== null
-                ? 'Nothing here yet — say the first thing.'
-                : 'Nothing here yet.'}
-            </p>
-          )}
+        {items !== null && items.length === 0 && (
+          <p className="comment-status">
+            {currentUserId !== null
+              ? 'Nothing here yet — say the first thing.'
+              : 'Nothing here yet.'}
+          </p>
+        )}
 
-          {currentUserId !== null && (
-            <form className="comment-form" onSubmit={submit}>
-              <div className="comment-form-row">
-                <TypeSelect
-                  value={commentType}
-                  disabled={posting}
-                  onChange={setCommentType}
-                />
-                <textarea
-                  aria-label="Your comment"
-                  placeholder="Add to the discussion…"
-                  rows={2}
-                  value={body}
-                  disabled={posting}
-                  onChange={(e) => setBody(e.target.value)}
-                />
-              </div>
-              <div className="comment-form-actions">
-                <button
-                  type="submit"
-                  disabled={posting || body.trim() === ''}
-                >
-                  {posting ? 'Posting…' : 'Post'}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      )}
-    </div>
+        {currentUserId === null && items !== null && (
+          <p className="comment-status">Sign in to join the discussion.</p>
+        )}
+
+        {currentUserId !== null && (
+          <form className="comment-form" onSubmit={submit}>
+            <div className="comment-form-row">
+              <TypeSelect
+                value={commentType}
+                disabled={posting}
+                onChange={setCommentType}
+              />
+              <textarea
+                aria-label="Your comment"
+                placeholder="Add to the discussion…"
+                rows={3}
+                value={body}
+                disabled={posting}
+                onChange={(e) => setBody(e.target.value)}
+              />
+            </div>
+            <div className="comment-form-actions">
+              <button type="submit" disabled={posting || body.trim() === ''}>
+                {posting ? 'Posting…' : 'Post'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </section>
   )
 }

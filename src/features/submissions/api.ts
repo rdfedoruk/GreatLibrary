@@ -81,6 +81,78 @@ export async function createSubmission(
   }
 }
 
+const SELECT = `id, url, description, source_site, created_at,
+   submitter:profiles!submissions_submitted_by_fkey ( display_name, slug ),
+   submission_attributions ( profiles ( display_name, slug ) ),
+   submission_tags ( tags ( id, dimension, name ) ),
+   votes ( user_id, value ),
+   comments ( count )`
+
+type SubmissionRow = {
+  id: string
+  url: string
+  description: string
+  source_site: SourceSite
+  created_at: string
+  submitter: { display_name: string; slug: string }
+  submission_attributions: {
+    profiles: { display_name: string; slug: string } | null
+  }[]
+  submission_tags: { tags: SubmissionTag | null }[]
+  votes: { user_id: string; value: number }[]
+  comments: { count: number }[]
+}
+
+function toItem(
+  row: SubmissionRow,
+  currentUserId: string | null,
+): SubmissionListItem {
+  const own = currentUserId
+    ? row.votes.find((v) => v.user_id === currentUserId)
+    : undefined
+  return {
+    id: row.id,
+    url: row.url,
+    description: row.description,
+    source_site: row.source_site,
+    created_at: row.created_at,
+    submitter: {
+      name: row.submitter.display_name,
+      slug: row.submitter.slug,
+    },
+    creators: row.submission_attributions.flatMap((a) =>
+      a.profiles
+        ? [{ name: a.profiles.display_name, slug: a.profiles.slug }]
+        : [],
+    ),
+    tags: row.submission_tags.flatMap((st) => st.tags ?? []),
+    score: row.votes.reduce((sum, v) => sum + v.value, 0),
+    userVote: (own?.value as VoteValue | undefined) ?? null,
+    // Only the count comes back with the list; the comments themselves
+    // load on the submission's own page.
+    commentCount: row.comments[0]?.count ?? 0,
+  }
+}
+
+// Null when there's no submission with that id, so the page can say so
+// rather than showing an error.
+export async function fetchSubmission(
+  id: string,
+  currentUserId: string | null,
+): Promise<SubmissionListItem | null> {
+  const { data, error } = await supabase
+    .from('submissions')
+    .select(SELECT)
+    .eq('id', id)
+    .maybeSingle()
+
+  // Supabase hands back a plain object, not an Error. Thrown as-is it reaches
+  // the screen as "[object Object]".
+  if (error) throw new Error(error.message)
+  if (data === null) return null
+  return toItem(data, currentUserId)
+}
+
 // Net score is summed client-side from the embedded vote rows, and the
 // current user's own vote is picked out of the same rows. Fine at current
 // scale; switch to a DB view/aggregate if lists get long or hot.
@@ -90,14 +162,7 @@ export async function fetchSubmissions(
 ): Promise<SubmissionListItem[]> {
   let query = supabase
     .from('submissions')
-    .select(
-      `id, url, description, source_site, created_at,
-       submitter:profiles!submissions_submitted_by_fkey ( display_name, slug ),
-       submission_attributions ( profiles ( display_name, slug ) ),
-       submission_tags ( tags ( id, dimension, name ) ),
-       votes ( user_id, value ),
-       comments ( count )`,
-    )
+    .select(SELECT)
     .order('created_at', { ascending: false })
 
   if (filter.submittedBy) {
@@ -119,33 +184,7 @@ export async function fetchSubmissions(
 
   const { data, error } = await query
 
-  if (error) throw error
+  if (error) throw new Error(error.message)
 
-  return data.map((row) => {
-    const own = currentUserId
-      ? row.votes.find((v) => v.user_id === currentUserId)
-      : undefined
-    return {
-      id: row.id,
-      url: row.url,
-      description: row.description,
-      source_site: row.source_site,
-      created_at: row.created_at,
-      submitter: {
-        name: row.submitter.display_name,
-        slug: row.submitter.slug,
-      },
-      creators: row.submission_attributions.flatMap((a) =>
-        a.profiles
-          ? [{ name: a.profiles.display_name, slug: a.profiles.slug }]
-          : [],
-      ),
-      tags: row.submission_tags.flatMap((st) => st.tags ?? []),
-      score: row.votes.reduce((sum, v) => sum + v.value, 0),
-      userVote: (own?.value as VoteValue | undefined) ?? null,
-      // Only the count comes back with the list; the comments themselves
-      // load when a thread is actually opened.
-      commentCount: row.comments[0]?.count ?? 0,
-    }
-  })
+  return data.map((row) => toItem(row, currentUserId))
 }

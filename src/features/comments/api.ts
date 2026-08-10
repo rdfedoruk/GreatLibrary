@@ -51,7 +51,9 @@ export async function fetchComments(
     .eq('submission_id', submissionId)
     .order('created_at', { ascending: true })
 
-  if (error) throw error
+  // Supabase hands back a plain object, not an Error. Thrown as-is it reaches
+  // the screen as "[object Object]".
+  if (error) throw new Error(error.message)
 
   return data.map(toItem)
 }

@@ -23,4 +23,22 @@ test.describe('the home page, signed out', () => {
     await page.goto('/')
     await expect(page.getByRole('button', { name: 'Submit content' })).toHaveCount(0)
   })
+
+  // Read-only on purpose: the dev server points at the live database, so this
+  // walks to the discussion and stops short of posting anything.
+  test('leads from an entry to its discussion', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByText('Loading the library…')).toHaveCount(0, { timeout: 15000 })
+
+    const discuss = page.getByRole('link', { name: /^Discuss \(\d+\)$/ })
+    test.skip((await discuss.count()) === 0, 'the library has no entries to open')
+
+    await discuss.first().click()
+
+    await expect(page).toHaveURL(/\/submission\/[0-9a-f-]+$/)
+    await expect(page.getByRole('heading', { name: /^Discussion/ })).toBeVisible()
+    // Signed out, the thread reads but offers nothing to post with.
+    await expect(page.getByText('Sign in to join the discussion.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Post' })).toHaveCount(0)
+  })
 })

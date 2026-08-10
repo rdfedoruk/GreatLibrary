@@ -19,12 +19,18 @@ shared.
 
 **Reading**
 
-- Every submission in the list shows how many comments it has, and
-  opening it reveals the thread underneath that submission.
+- Every entry in the library feed carries a **Discuss (n)** button
+  showing how many comments it has.
+- Clicking Discuss opens a page dedicated to that piece of content,
+  with the entry at the top and the discussion beneath it.
+- The entry's title still goes to the content itself, not to the
+  discussion — the two are separate destinations.
 - Comments are visible to everyone, signed in or not, showing the
   author, the type, and the body, oldest first.
 - A submission with no comments says so rather than showing an empty
   space.
+- A discussion page for a submission that doesn't exist says so and
+  offers a way back to the library, rather than erroring.
 
 **Posting**
 
@@ -55,11 +61,16 @@ shared.
 
 ## Notes
 
-Comments expand inline on each submission card rather than living on a
-page of their own — decided 2026-08-10. The tradeoff accepted: there is
-no web address that points at a single submission's discussion, so a
-thread can't be linked to directly. A submission page can be added
-later if sharing a discussion turns out to matter.
+Each submission has its own page at `/submission/<id>`, reached by the
+Discuss button — decided 2026-08-10. Threads expanding inline on the
+card was tried first and rejected: an entry's title leaves for the
+content itself, so there was no obvious way in to the discussion, and a
+small toggle on a card isn't something you'd find.
+
+The address uses the submission's raw id, so it looks like
+`/submission/8a750c6d-…` rather than something readable. Giving
+submissions a slug the way profiles have one is a schema change; worth
+doing if these links ever get shared in public.
 
 The `comments` table, its `comment_type` enum, and public-read /
 own-write row-level security policies have existed since the very first
