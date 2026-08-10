@@ -130,8 +130,18 @@ checking in first.
 - **Hide until authorized** — new-user submissions held in a review queue
   before going live. Noted as a spam hedge in `decisions-log.md` §
   Moderation; not designed as schema/UI yet.
-- **Comment threads** — Phase 2 item, not built yet. `comment_type` enum
-  (comment / suggestion / critique).
+- **Comment threads** — BUILT and live (2026-08-10). Every entry carries a
+  Discuss (n) button opening `/submission/<id>`, where the discussion
+  lives; the entry's title still goes to the content itself. Post as
+  comment / suggestion / critique, edit or delete your own, edits marked
+  as edited. See `docs/work/stories/comment-on-a-submission.md`.
+  - Not built, deliberately: threaded replies, and any way for someone
+    other than the author to edit or remove a comment. Moderator removal
+    belongs to the takedown flow above.
+  - Backlog: the address uses the raw submission id
+    (`/submission/8a750c6d-…`). Giving submissions a readable slug the way
+    profiles have one is a schema change — worth doing if these links get
+    shared in public.
 - **Thumbnails** — should "just work" regardless of source; show the best
   available thumbnail for the content type. Different functions behind the
   scenes per source, invisible to the user.

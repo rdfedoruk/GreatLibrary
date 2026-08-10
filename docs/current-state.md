@@ -1,9 +1,12 @@
 # Current State
 
-**What the app actually is on 2026-07-19.** Written by reading the seven
-migrations and `src/`, not by reading the other docs. Where this file and
-another doc disagree, this one is right — the others are being reconciled
-against it.
+**What the app actually is on 2026-07-19**, with the comments feature
+folded in on 2026-08-10. Written by reading the migrations and `src/`,
+not by reading the other docs. Where this file and another doc disagree,
+this one is right — the others are being reconciled against it.
+
+Everything below has been re-checked except where a line says otherwise;
+the 2026-07-19 sweep covered seven migrations, and there are now eight.
 
 This file describes *what exists*. It does not say why (see
 `decisions-log.md`), what's next (`todo.md`), or what's undecided
@@ -21,6 +24,11 @@ Three pages, live at greatlibrary.theduke.digital:
   still land.
 - **`/claim`** — add and remove your own platform identities, search
   unclaimed pages, request a claim, see your requests' status.
+- **`/submission/:id`** — one page per submission, reached by the
+  Discuss (n) button on each entry in the list. The entry itself at the
+  top, the discussion beneath. Signed in you can post a comment,
+  suggestion or critique, and edit or delete your own; an edited comment
+  is marked as edited. Signed out it reads but offers no way to post.
 
 Sign-in is Google **or** email magic-link. Both create a profile
 automatically, with a readable slug generated from the display name
@@ -57,14 +65,18 @@ Rules the database enforces on its own, independent of any app code:
   can collide freely, so a squatter can't permanently block the real owner.
 - Reads are public. Writes are own-row only. Anything not explicitly
   granted is denied.
+- A comment must contain at least one non-whitespace character, so a body
+  of spaces, tabs or blank lines is refused.
+- A comment can only be edited or deleted by its author. Editing stamps
+  `edited_at` by trigger, so an edit can't pretend not to be one, and the
+  same trigger pins the submission, author and creation time — an edit
+  can't move a comment elsewhere or reassign it.
 
 ## Built in the database, with no way to use it yet
 
 These tables exist and are enforced, but nothing in the app reads or writes
 them:
 
-- **`comments`** — the whole table and its comment/suggestion/critique type.
-  No comments feature folder, no UI. This was Phase 2 work that never got built.
 - **`removal_requests`** — table and permission rules exist for verified
   self-removal. No UI.
 - **`entity_members`** — table and trigger exist. No UI for naming who acts
@@ -111,10 +123,16 @@ is denied by the database. This is deliberate: whether filing one requires
 an account is undecided, and the migration says not to add a rule without
 that decision.
 
+## Testing
+
+Tests exist as of 2026-08-10: `npm test` runs 35 Vitest checks of the
+database rules and 3 Playwright journeys. They run against the separate
+GreatLibraryTesting project and refuse to start if pointed at production.
+See `docs/work/README.md` § Testing for what is and isn't covered on
+purpose, and `docs/deployment.md` for the traps in pushing migrations.
+
 ## Not verified
 
-- **No tests exist.** No test runner is installed and there is no `test`
-  script. `package.json` has `dev`, `build`, `lint`, `preview` only.
 - **The claim flow has never been exercised against a real signed-in
   session.** It was built and deployed but not live-tested.
 - The only account in production is Robert Fedoruk, on Google sign-in.
