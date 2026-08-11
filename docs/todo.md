@@ -75,10 +75,13 @@ checking in first.
   - **Verification owed:** seed a throwaway unclaimed profile + identity and
     confirm the match-suggestion banner and claim request round-trip live.
     Andrew deferred this ("later").
-  - **Admin role decision (2026-07-18):** no role table, no permission
-    levels — hardcoded to being solo-run. Claim/removal approval happens by
-    Andrew editing `claims.status` / `profiles.linked_user_id` directly via
-    SQL. Revisit only when a second admin actually exists.
+  - **Admin role decision — OVERWRITTEN 2026-08-11.** Was: no role table,
+    no permission levels, hardcoded to being solo-run, revisit only when a
+    second admin exists. Now: the product gets a roles layer, held in the
+    database and granted per profile. Claim/removal approval is still
+    hand-edited SQL until a screen exists for it, but the permission rule
+    behind that screen will ask for the **admin** role, not for Andrew.
+    See `decisions-log.md` § Roles & Admin Access.
 - **Multi-platform creators** — DECIDED 2026-07-18: one creator can hold
   identities across any number of platforms (YouTube + SN Community +
   podcast, etc.) via `creator_identities`, replacing the old fixed-column
@@ -182,6 +185,16 @@ checking in first.
 
 - **Tag input + autocomplete** — done.
 - **Tag removal by chip button only** — settled.
+- **Filtering the list by tag** — BUILT (2026-08-11). The tags on an entry
+  are the way in: click one and the feed narrows to everything carrying
+  it. The choice lives in the address (`/?tag=flow-designer`), derived
+  from the tag's display name rather than stored, so renaming a tag breaks
+  old shared links. One tag at a time — several at once still means
+  deciding AND vs OR, which stays parked. A chip bar above the feed was
+  built first and rejected; nothing lists the vocabulary now. See
+  `docs/work/stories/filter-the-list-by-tag.md`.
+  - Not built: filtering by source site, and any sort order other than
+    newest-first. Both are still open in the browsing epic.
 - **Tag hierarchy** — flag: conflicts with a locked v1 decision in
   `tagging-taxonomy.md` (flat, two dimensions, no hierarchy — explicitly
   rejected as over-engineered for solo-curator scale). Worth a conversation
@@ -200,9 +213,12 @@ checking in first.
 
 ## Administrata
 
-- **Admin role** — **DECISION NEEDED.** Doesn't exist yet in schema/RLS.
-  Blocks: tag proposal reconciliation, claim approval, moderation queue,
-  creator removal requests.
+- **Admin role** — DECIDED 2026-08-11: a roles layer, granted per profile,
+  first role **admin** to Robert Fedoruk. Not built yet; it goes in with
+  [[curate-the-tag-vocabulary]], which is its first user. Still blocked on
+  it until then: tag proposal reconciliation, claim approval, moderation
+  queue, creator removal requests. See `decisions-log.md` § Roles & Admin
+  Access.
 - **Moderation / review queue** — new-user submissions and claims held for
   manual review; rate limiting considered for new accounts. Not built
   (Phase 4).

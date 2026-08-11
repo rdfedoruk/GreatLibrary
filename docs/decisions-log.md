@@ -62,6 +62,14 @@ Simplified from the original "Word doc style inline review" idea. Decision: keep
 ### Moderation
 Manual moderation acceptable at launch; long-term goal is communal moderation. Submission friction (e.g. account requirement) was proposed as a hedge against AI-generated spam submissions, but flagged as weak — friction doesn't meaningfully raise the cost of AI-generated submission text. More effective hedges likely: new-user submissions routed to a review queue before going live, and/or submission rate limits for new accounts. Not being built now, but should be considered in the user/submission data model so it's not a retrofit later.
 
+### Roles & Admin Access (2026-08-11 — overwrites the "no role table" decision)
+
+**Decision: the product gets a roles layer.** The earlier position — no role table, no permission levels, hardcoded to being solo-run until a second admin exists (recorded 2026-07-18 in `todo.md` § Authors and `current-state.md`) — is withdrawn, not deferred. Andrew's call, 2026-08-11: a yes/no admin flag is a thing we'd throw away, and roles are coming regardless.
+
+**Shape:** roles are held in the database and granted per profile, so a role can be given to a second person without a schema change and a second role can be added without touching how the first one is checked. Permission rules ask "does this person hold this role", never "is this person Andrew". First role is **admin**, granted to Robert Fedoruk; **moderator** is the likely second, when the review queue and takedown flows get picked up.
+
+**What it unblocks**, all of which are hand-written SQL today: curating the tag vocabulary, approving and rejecting claims, marking an identity verified, merging duplicate pages, and the proposed-tags queue. See [[running-the-library]] in `docs/work/epics/`.
+
 ### Auth / Account Model
 **Decision: Google-only sign-in for v1** (no email/password).
 
