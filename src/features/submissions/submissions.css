@@ -103,18 +103,33 @@
   padding: 0;
 }
 
+/* Chips are links into a feed of everything sharing the tag, so they need to
+   look clickable without turning into a row of underlined blue text. */
 .tag {
+  display: inline-block;
   font-size: 13px;
   line-height: 1;
   padding: 4px 8px;
   border-radius: 999px;
   border: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.tag:hover {
+  border-color: var(--accent-border);
+  color: var(--text-h);
 }
 
 .tag-medium {
   color: var(--accent);
   background: var(--accent-bg);
   border-color: transparent;
+}
+
+.tag-medium:hover {
+  color: var(--accent);
+  border-color: var(--accent-border);
 }
 
 .submission-discuss {

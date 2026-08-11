@@ -102,6 +102,26 @@ export async function signOut(page: Page): Promise<void> {
   await page.context().clearCookies()
 }
 
+/**
+ * A person's page with no login behind it — enough to own a submission when a
+ * journey only needs something in the library to look at. Cheaper and steadier
+ * than minting an auth user for a read-only view.
+ */
+export async function seedProfile(displayName: string): Promise<string> {
+  const { data, error } = await admin
+    .from('profiles')
+    .insert({
+      display_name: displayName,
+      type: 'person',
+      slug: `journey-${crypto.randomUUID()}`,
+    })
+    .select('id')
+    .single()
+  if (error) throw error
+  madeProfiles.push(data.id)
+  return data.id
+}
+
 export async function seedSubmission(
   submittedBy: string,
   description: string,
@@ -122,6 +142,27 @@ export async function seedSubmission(
 }
 
 /**
+ * Puts a tag from the controlled vocabulary on a seeded submission. The link
+ * row needs no cleanup of its own — it cascades when the submission goes.
+ */
+export async function tagSubmission(
+  submissionId: string,
+  tagName: string,
+): Promise<void> {
+  const { data: tag, error } = await admin
+    .from('tags')
+    .select('id')
+    .eq('name', tagName)
+    .single()
+  if (error) throw error
+
+  const { error: linkError } = await admin
+    .from('submission_tags')
+    .insert({ submission_id: submissionId, tag_id: tag.id })
+  if (linkError) throw linkError
+}
+
+/**
  * Registers a page the *app* created mid-journey (an unclaimed creator page,
  * say) so teardown takes it with everything else. Looked up by name because
  * the browser is the only thing that knows its id.
@@ -132,6 +173,12 @@ export async function trackProfileNamed(displayName: string): Promise<void> {
     .select('id')
     .eq('display_name', displayName)
   for (const row of data ?? []) madeProfiles.push(row.id)
+}
+
+/** Registers a submission the *app* created mid-journey, so teardown takes it. */
+export async function trackSubmissionAt(url: string): Promise<void> {
+  const { data } = await admin.from('submissions').select('id').eq('url', url)
+  for (const row of data ?? []) madeSubmissions.push(row.id)
 }
 
 /** Removes everything this worker made. Safe to call when nothing was made. */

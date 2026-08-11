@@ -33,7 +33,16 @@ export function SubmissionList({
     return () => {
       cancelled = true
     }
-  }, [currentUserId, refreshKey, filter?.submittedBy, filter?.attributedTo])
+    // Filter fields are listed one by one because the filter object itself is
+    // rebuilt on every render. A new field added to SubmissionFilter must be
+    // added here too, or it will look like it works and quietly not refetch.
+  }, [
+    currentUserId,
+    refreshKey,
+    filter?.submittedBy,
+    filter?.attributedTo,
+    filter?.taggedWith,
+  ])
 
   if (error) {
     return <p className="submission-status">Couldn’t load the library: {error}</p>

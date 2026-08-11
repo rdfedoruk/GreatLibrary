@@ -23,6 +23,8 @@ this view.
   human-readable source label (e.g. "ServiceNow Community" for
   `sn_community`), its tags (medium tags before module tags), who
   submitted it, and the submission date.
+- Each tag on a card is a link to a feed of everything carrying it — see
+  [[filter-the-list-by-tag]] for what that feed does.
 - If the content has one or more attributed creators, "by {name(s)}"
   appears before "submitted by", each name linking to that person's
   profile page; if there are none, that segment is omitted entirely.
@@ -46,3 +48,4 @@ database view or aggregate if lists get long or hot.
 ## Related
 
 - [[browsing-and-voting]]
+- [[filter-the-list-by-tag]] — the same list, narrowed to one tag

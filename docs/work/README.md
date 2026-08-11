@@ -46,6 +46,18 @@ or the link only works one way.
 
 Copy `_templates/epic.md` into `epics/`, then add it to the list below.
 
+## The epics
+
+- [[account-and-sign-in]] — *Working*
+- [[browsing-and-voting]] — *Working*
+- [[public-profiles]] — *Working*
+- [[submitting-content]] — *Working*
+- [[attribution-and-verification]] — *Half-built*
+- [[claiming-your-page]] — *Half-built*
+- [[moderation-and-cleanup]] — *Half-built*
+- [[keeping-content-fresh]] — *Not started*
+- [[running-the-library]] — *Not started*
+
 ## Testing
 
 Two layers get tested, one deliberately doesn't, and a story isn't done
@@ -78,7 +90,14 @@ why every journey was a signed-out one. `tests/e2e/helpers.ts` now mints
 a real session through the API and writes it into the browser before the
 app starts, because neither Google nor a magic-link can be completed by a
 test. `signIn(page)`, `seedSubmission()` and `cleanUp()` in an `afterAll`
-are the whole harness.
+are the whole harness. Alongside them: `seedProfile()` makes a page with
+no login behind it, which is enough to own a submission when a journey
+only needs something in the library to look at — cheaper and steadier
+than minting a login, and worth reaching for first, since four journeys
+creating logins at once is what made one fail on a network hiccup.
+`tagSubmission()` puts a vocabulary tag on a seeded entry, and
+`trackSubmissionAt(url)` registers something the *app* created mid-journey
+so teardown takes it too.
 
 Anything a journey creates has to be taken back out in that `cleanUp`.
 Deleting the login is **not** enough: since migration 3 a profile

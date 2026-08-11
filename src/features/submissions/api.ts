@@ -34,6 +34,8 @@ export interface SubmissionListItem {
 export interface SubmissionFilter {
   submittedBy?: string
   attributedTo?: string
+  /** A tag id. Narrows the list to submissions carrying that tag. */
+  taggedWith?: string
 }
 
 export interface NewSubmission {
@@ -208,16 +210,33 @@ export async function fetchSubmissions(
   if (filter.submittedBy) {
     query = query.eq('submitted_by', filter.submittedBy)
   }
+  // Creator and tag both live in a join table, and both are looked up
+  // separately rather than as an !inner join filter — a join filter would
+  // narrow the creators and tags embedded in each returned row to just the
+  // one matched on, so a filtered card would show a single tag each.
+  // Matching ids are intersected, so asking for both means both.
+  let ids: string[] | null = null
+
   if (filter.attributedTo) {
-    // Two steps rather than an !inner join filter, so the embedded
-    // attribution list still shows ALL of a submission's creators, not just
-    // the one being filtered on.
     const { data: rows, error: attrError } = await supabase
       .from('submission_attributions')
       .select('submission_id')
       .eq('profile_id', filter.attributedTo)
-    if (attrError) throw attrError
-    const ids = rows.map((r) => r.submission_id)
+    if (attrError) throw new Error(attrError.message)
+    ids = rows.map((r) => r.submission_id)
+  }
+
+  if (filter.taggedWith) {
+    const { data: rows, error: tagError } = await supabase
+      .from('submission_tags')
+      .select('submission_id')
+      .eq('tag_id', filter.taggedWith)
+    if (tagError) throw new Error(tagError.message)
+    const tagged = rows.map((r) => r.submission_id)
+    ids = ids === null ? tagged : ids.filter((id) => tagged.includes(id))
+  }
+
+  if (ids !== null) {
     if (ids.length === 0) return []
     query = query.in('id', ids)
   }

@@ -44,3 +44,5 @@ is kept, untagged.
 ## Related
 
 - [[submitting-content]]
+- [[filter-the-list-by-tag]] — makes the tags applied here clickable, and
+  is what stops this story's output from being decoration
