@@ -23,6 +23,25 @@
   opacity: 0.75;
 }
 
+/* Says which tag the feed is narrowed to, and offers the only way back out. */
+.feed-filter {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.feed-filter h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.feed-filter a {
+  font-size: 14px;
+}
+
 .shell button {
   font-size: 16px;
   padding: 8px 16px;

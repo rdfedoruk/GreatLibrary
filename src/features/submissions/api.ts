@@ -12,6 +12,7 @@ export interface SubmissionTag {
 }
 
 export interface ProfileRef {
+  id: string
   name: string
   slug: string
 }
@@ -33,6 +34,8 @@ export interface SubmissionListItem {
 export interface SubmissionFilter {
   submittedBy?: string
   attributedTo?: string
+  /** A tag id. Narrows the list to submissions carrying that tag. */
+  taggedWith?: string
 }
 
 export interface NewSubmission {
@@ -81,9 +84,41 @@ export async function createSubmission(
   }
 }
 
+// Credits a profile with making this submission's content — separate from
+// who submitted the link. The permission rule is the database's: the
+// submitter of this submission, or a profile attributing itself.
+export async function attributeProfile(
+  submissionId: string,
+  profileId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('submission_attributions')
+    .insert({ submission_id: submissionId, profile_id: profileId })
+
+  if (error) {
+    if (error.code === '23505') {
+      throw new Error('That page is already credited on this entry.')
+    }
+    throw new Error(error.message)
+  }
+}
+
+export async function removeAttribution(
+  submissionId: string,
+  profileId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('submission_attributions')
+    .delete()
+    .eq('submission_id', submissionId)
+    .eq('profile_id', profileId)
+
+  if (error) throw new Error(error.message)
+}
+
 const SELECT = `id, url, description, source_site, created_at,
-   submitter:profiles!submissions_submitted_by_fkey ( display_name, slug ),
-   submission_attributions ( profiles ( display_name, slug ) ),
+   submitter:profiles!submissions_submitted_by_fkey ( id, display_name, slug ),
+   submission_attributions ( profiles ( id, display_name, slug ) ),
    submission_tags ( tags ( id, dimension, name ) ),
    votes ( user_id, value ),
    comments ( count )`
@@ -94,9 +129,9 @@ type SubmissionRow = {
   description: string
   source_site: SourceSite
   created_at: string
-  submitter: { display_name: string; slug: string }
+  submitter: { id: string; display_name: string; slug: string }
   submission_attributions: {
-    profiles: { display_name: string; slug: string } | null
+    profiles: { id: string; display_name: string; slug: string } | null
   }[]
   submission_tags: { tags: SubmissionTag | null }[]
   votes: { user_id: string; value: number }[]
@@ -117,12 +152,19 @@ function toItem(
     source_site: row.source_site,
     created_at: row.created_at,
     submitter: {
+      id: row.submitter.id,
       name: row.submitter.display_name,
       slug: row.submitter.slug,
     },
     creators: row.submission_attributions.flatMap((a) =>
       a.profiles
-        ? [{ name: a.profiles.display_name, slug: a.profiles.slug }]
+        ? [
+            {
+              id: a.profiles.id,
+              name: a.profiles.display_name,
+              slug: a.profiles.slug,
+            },
+          ]
         : [],
     ),
     tags: row.submission_tags.flatMap((st) => st.tags ?? []),
@@ -168,16 +210,33 @@ export async function fetchSubmissions(
   if (filter.submittedBy) {
     query = query.eq('submitted_by', filter.submittedBy)
   }
+  // Creator and tag both live in a join table, and both are looked up
+  // separately rather than as an !inner join filter — a join filter would
+  // narrow the creators and tags embedded in each returned row to just the
+  // one matched on, so a filtered card would show a single tag each.
+  // Matching ids are intersected, so asking for both means both.
+  let ids: string[] | null = null
+
   if (filter.attributedTo) {
-    // Two steps rather than an !inner join filter, so the embedded
-    // attribution list still shows ALL of a submission's creators, not just
-    // the one being filtered on.
     const { data: rows, error: attrError } = await supabase
       .from('submission_attributions')
       .select('submission_id')
       .eq('profile_id', filter.attributedTo)
-    if (attrError) throw attrError
-    const ids = rows.map((r) => r.submission_id)
+    if (attrError) throw new Error(attrError.message)
+    ids = rows.map((r) => r.submission_id)
+  }
+
+  if (filter.taggedWith) {
+    const { data: rows, error: tagError } = await supabase
+      .from('submission_tags')
+      .select('submission_id')
+      .eq('tag_id', filter.taggedWith)
+    if (tagError) throw new Error(tagError.message)
+    const tagged = rows.map((r) => r.submission_id)
+    ids = ids === null ? tagged : ids.filter((id) => tagged.includes(id))
+  }
+
+  if (ids !== null) {
     if (ids.length === 0) return []
     query = query.in('id', ids)
   }

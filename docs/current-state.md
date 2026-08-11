@@ -1,12 +1,12 @@
 # Current State
 
-**What the app actually is on 2026-07-19**, with the comments feature
+**What the app actually is on 2026-07-19**, with comments and attribution
 folded in on 2026-08-10. Written by reading the migrations and `src/`,
 not by reading the other docs. Where this file and another doc disagree,
 this one is right — the others are being reconciled against it.
 
 Everything below has been re-checked except where a line says otherwise;
-the 2026-07-19 sweep covered seven migrations, and there are now eight.
+the 2026-07-19 sweep covered seven migrations, and there are now nine.
 
 This file describes *what exists*. It does not say why (see
 `decisions-log.md`), what's next (`todo.md`), or what's undecided
@@ -17,7 +17,14 @@ This file describes *what exists*. It does not say why (see
 Three pages, live at greatlibrary.theduke.digital:
 
 - **`/`** — the submission list, plus a submit form when signed in.
-  Filtering by tag and source. Vote arrows with a net score.
+  Newest first, always; there is no sorting. The tags printed on an entry
+  are links: clicking one — here or on the entry's own page — narrows the
+  feed to everything carrying that tag, under a heading naming it and a
+  way back to everything. The choice sits in the address
+  (`/?tag=flow-designer`), so a narrowed feed can be shared and the back
+  button undoes it. Nothing lists the vocabulary; a tag is only reachable
+  from an entry already carrying it. Vote arrows with a net score.
+  Filtering by source site does not exist.
 - **`/profile/:slug`** — one page per identity. Name, claimed checkmark,
   person-or-entity chip, content attributed to them, content they submitted.
   Follows a retired duplicate's pointer one hop, so links to a merged page
@@ -29,6 +36,11 @@ Three pages, live at greatlibrary.theduke.digital:
   top, the discussion beneath. Signed in you can post a comment,
   suggestion or critique, and edit or delete your own; an edited comment
   is marked as edited. Signed out it reads but offers no way to post.
+  If you are the one who submitted it, a **Who made this?** box sits
+  between the two: search for whoever made the content, or type a name
+  nobody has a page for and one is created. Credits show up in the
+  entry's by-line and on that person's page, and come off again with an
+  ×. Nobody else sees the box.
 
 Sign-in is Google **or** email magic-link. Both create a profile
 automatically, with a readable slug generated from the display name
@@ -71,6 +83,13 @@ Rules the database enforces on its own, independent of any app code:
   `edited_at` by trigger, so an edit can't pretend not to be one, and the
   same trigger pins the submission, author and creation time — an edit
   can't move a comment elsewhere or reassign it.
+- A display name must contain at least one non-whitespace character.
+- A member may create a page only for a *person* who has never signed in
+  — never one attached to a login, never one born already-merged. Entity
+  pages stay a hand edit.
+- Credits on a submission can be added and removed by its submitter.
+  Removal is deliberately as wide as adding, which means a submitter can
+  also strip a self-attribution somebody else added.
 
 ## Built in the database, with no way to use it yet
 
@@ -93,12 +112,12 @@ keeping the `verify-youtube` Edge Function, the `verified` columns, and the
 unique index, so the work is parked rather than lost. Working automation is
 at commit `c69fb16`.
 
-**The live consequence, which no doc currently records:** the permission
-rule added in migration 7 lets someone attribute themselves to *another
-member's* submission only if they hold a verified identity — and nothing in
-the app can grant verification any more. So that path is admin-SQL-only
-today. Attribution by the submitter still works normally; it's only
-self-attribution to someone else's submission that's affected.
+**The live consequence:** the permission rule added in migration 7 lets
+someone attribute themselves to *another member's* submission only if they
+hold a verified identity — and nothing in the app can grant verification any
+more. So that path is admin-SQL-only today. Attribution by the submitter is
+a working feature as of 2026-08-10; it's only self-attribution to someone
+else's submission that's affected.
 
 ## Only possible by hand
 
@@ -112,8 +131,11 @@ Andrew editing rows directly:
   including for your own profile).
 - Adding or changing tags in the controlled vocabulary.
 
-This is a recorded decision — no role table until a second admin exists —
-not an oversight.
+This was a recorded decision — no role table until a second admin exists
+— not an oversight. **Overwritten 2026-08-11:** the product gets a roles
+layer, granted per profile, first role admin. Nothing is built yet, so
+everything above is still hand-edited today; see `decisions-log.md`
+§ Roles & Admin Access and [[curate-the-tag-vocabulary]].
 
 ## Blocked in the database on purpose
 
@@ -125,8 +147,9 @@ that decision.
 
 ## Testing
 
-Tests exist as of 2026-08-10: `npm test` runs 35 Vitest checks of the
-database rules and 3 Playwright journeys. They run against the separate
+Tests exist as of 2026-08-10: `npm test` runs 56 Vitest checks of the
+database rules and 11 Playwright journeys (counts as of 2026-08-11 —
+tagging and tag filtering were the last areas with no coverage at all). They run against the separate
 GreatLibraryTesting project and refuse to start if pointed at production.
 See `docs/work/README.md` § Testing for what is and isn't covered on
 purpose, and `docs/deployment.md` for the traps in pushing migrations.

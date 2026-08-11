@@ -75,10 +75,13 @@ checking in first.
   - **Verification owed:** seed a throwaway unclaimed profile + identity and
     confirm the match-suggestion banner and claim request round-trip live.
     Andrew deferred this ("later").
-  - **Admin role decision (2026-07-18):** no role table, no permission
-    levels — hardcoded to being solo-run. Claim/removal approval happens by
-    Andrew editing `claims.status` / `profiles.linked_user_id` directly via
-    SQL. Revisit only when a second admin actually exists.
+  - **Admin role decision — OVERWRITTEN 2026-08-11.** Was: no role table,
+    no permission levels, hardcoded to being solo-run, revisit only when a
+    second admin exists. Now: the product gets a roles layer, held in the
+    database and granted per profile. Claim/removal approval is still
+    hand-edited SQL until a screen exists for it, but the permission rule
+    behind that screen will ask for the **admin** role, not for Andrew.
+    See `decisions-log.md` § Roles & Admin Access.
 - **Multi-platform creators** — DECIDED 2026-07-18: one creator can hold
   identities across any number of platforms (YouTube + SN Community +
   podcast, etc.) via `creator_identities`, replacing the old fixed-column
@@ -156,12 +159,20 @@ checking in first.
   (first server code in the project — browsers block cross-origin fetches).
   **DECISION NEEDED:** does the title become a new `submissions` column, or
   just a suggestion pasted into the description? Schema change, flag it.
-- **Creator attribution on manual submissions** — currently not captured.
-  Superseded by the Authors § co-created content redesign: submitter picks
+- **Creator attribution on manual submissions** — BUILT and live
+  (2026-08-10), close to the shape described here: the submitter picks
   creators from an autocomplete (same pattern as tag selection), can miss
-  someone, correctable later. Auto-deriving a first guess from the URL
-  (YouTube oEmbed gives the channel) is a nice-to-have on top of that, not
-  required. The oEmbed part depends on the title-fetch edge function above.
+  someone, and can correct it later. Two differences worth knowing. It
+  lives on the submission's own page rather than the submit form, so
+  entries already in the library can be credited too. And unlike tags, a
+  name that isn't in the list *does* create a new page — creators mostly
+  haven't signed up, so a closed vocabulary would have made the feature
+  useless. Duplicates and misspellings are the accepted cost; merging
+  them is still a hand edit. See
+  `docs/work/stories/attribute-a-profile-to-a-submission.md`.
+  - Still open: auto-deriving a first guess from the URL (YouTube oEmbed
+    gives the channel) — a nice-to-have on top, not required. Depends on
+    the title-fetch edge function above.
 - **DECISION NEEDED — submission description source:** user-written at
   submission time vs. auto-suggested from page metadata with edit. Leaning
   auto-suggest for completion rate, not locked in.
@@ -174,6 +185,16 @@ checking in first.
 
 - **Tag input + autocomplete** — done.
 - **Tag removal by chip button only** — settled.
+- **Filtering the list by tag** — BUILT (2026-08-11). The tags on an entry
+  are the way in: click one and the feed narrows to everything carrying
+  it. The choice lives in the address (`/?tag=flow-designer`), derived
+  from the tag's display name rather than stored, so renaming a tag breaks
+  old shared links. One tag at a time — several at once still means
+  deciding AND vs OR, which stays parked. A chip bar above the feed was
+  built first and rejected; nothing lists the vocabulary now. See
+  `docs/work/stories/filter-the-list-by-tag.md`.
+  - Not built: filtering by source site, and any sort order other than
+    newest-first. Both are still open in the browsing epic.
 - **Tag hierarchy** — flag: conflicts with a locked v1 decision in
   `tagging-taxonomy.md` (flat, two dimensions, no hierarchy — explicitly
   rejected as over-engineered for solo-curator scale). Worth a conversation
@@ -192,16 +213,21 @@ checking in first.
 
 ## Administrata
 
-- **Admin role** — **DECISION NEEDED.** Doesn't exist yet in schema/RLS.
-  Blocks: tag proposal reconciliation, claim approval, moderation queue,
-  creator removal requests.
+- **Admin role** — DECIDED 2026-08-11: a roles layer, granted per profile,
+  first role **admin** to Robert Fedoruk. Not built yet; it goes in with
+  [[curate-the-tag-vocabulary]], which is its first user. Still blocked on
+  it until then: tag proposal reconciliation, claim approval, moderation
+  queue, creator removal requests. See `decisions-log.md` § Roles & Admin
+  Access.
 - **Moderation / review queue** — new-user submissions and claims held for
   manual review; rate limiting considered for new accounts. Not built
   (Phase 4).
 - **Normalization: content attributions** — admin-side correction of
   misattributed content. Same mechanism as regular attribution now (editing
-  `submission_creators`), just admin-initiated instead of submitter-initiated
-  — no longer a separate design question.
+  `submission_attributions`), just admin-initiated instead of
+  submitter-initiated — no longer a separate design question. Now that
+  members can create creator pages freely, the real admin job here is
+  merging duplicates of the same person, which is still hand-written SQL.
 - **Normalization: proposed tags** — admin side of the tag-proposal queue
   above.
 

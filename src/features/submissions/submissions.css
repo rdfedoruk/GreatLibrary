@@ -103,18 +103,33 @@
   padding: 0;
 }
 
+/* Chips are links into a feed of everything sharing the tag, so they need to
+   look clickable without turning into a row of underlined blue text. */
 .tag {
+  display: inline-block;
   font-size: 13px;
   line-height: 1;
   padding: 4px 8px;
   border-radius: 999px;
   border: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.tag:hover {
+  border-color: var(--accent-border);
+  color: var(--text-h);
 }
 
 .tag-medium {
   color: var(--accent);
   background: var(--accent-bg);
   border-color: transparent;
+}
+
+.tag-medium:hover {
+  color: var(--accent);
+  border-color: var(--accent-border);
 }
 
 .submission-discuss {
@@ -151,6 +166,124 @@
 
 .submission-back a:hover {
   color: var(--accent);
+}
+
+.attribution {
+  margin: 16px 24px 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.attribution-heading {
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.attribution-status {
+  font-size: 14px;
+  opacity: 0.75;
+  margin: 0 0 10px;
+}
+
+.attribution-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.attribution-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.shell button.attribution-remove {
+  font-size: 15px;
+  line-height: 1;
+  padding: 0 2px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.55;
+}
+
+.shell button.attribution-remove:hover:not(:disabled) {
+  opacity: 1;
+  color: #d0342c;
+}
+
+.attribution-search {
+  position: relative;
+  max-width: 420px;
+}
+
+.attribution-search input {
+  width: 100%;
+  box-sizing: border-box;
+  font: 15px/140% var(--sans);
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.attribution-search input:focus {
+  outline: none;
+  border-color: var(--accent-border);
+}
+
+.attribution-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
+
+.shell .attribution-suggestions button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+  padding: 6px 8px;
+  color: var(--text-h);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+}
+
+.shell .attribution-suggestions button:hover:not(:disabled) {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.attribution-kind,
+.attribution-add-new {
+  opacity: 0.7;
+}
+
+.attribution-error {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: #d0342c;
 }
 
 .profile-link {

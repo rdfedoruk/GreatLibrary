@@ -46,6 +46,18 @@ or the link only works one way.
 
 Copy `_templates/epic.md` into `epics/`, then add it to the list below.
 
+## The epics
+
+- [[account-and-sign-in]] — *Working*
+- [[browsing-and-voting]] — *Working*
+- [[public-profiles]] — *Working*
+- [[submitting-content]] — *Working*
+- [[attribution-and-verification]] — *Half-built*
+- [[claiming-your-page]] — *Half-built*
+- [[moderation-and-cleanup]] — *Half-built*
+- [[keeping-content-fresh]] — *Not started*
+- [[running-the-library]] — *Not started*
+
 ## Testing
 
 Two layers get tested, one deliberately doesn't, and a story isn't done
@@ -73,6 +85,26 @@ Every new journey test is a permanent maintenance cost, so the list stays
 small on purpose. If a story's criteria are already covered by an
 existing journey, don't add a second one.
 
+Signing a test browser in was the piece that used to be missing, which is
+why every journey was a signed-out one. `tests/e2e/helpers.ts` now mints
+a real session through the API and writes it into the browser before the
+app starts, because neither Google nor a magic-link can be completed by a
+test. `signIn(page)`, `seedSubmission()` and `cleanUp()` in an `afterAll`
+are the whole harness. Alongside them: `seedProfile()` makes a page with
+no login behind it, which is enough to own a submission when a journey
+only needs something in the library to look at — cheaper and steadier
+than minting a login, and worth reaching for first, since four journeys
+creating logins at once is what made one fail on a network hiccup.
+`tagSubmission()` puts a vocabulary tag on a seeded entry, and
+`trackSubmissionAt(url)` registers something the *app* created mid-journey
+so teardown takes it too.
+
+Anything a journey creates has to be taken back out in that `cleanUp`.
+Deleting the login is **not** enough: since migration 3 a profile
+outlives its login (`linked_user_id` is *set null*, not cascade) and a
+submission's `submitted_by` has no cascade at all. Order is submissions,
+then profiles, then logins.
+
 **3. Individual screen pieces — not tested, on purpose.**
 
 No tests for buttons, layout, styling, or single components. They change
@@ -86,6 +118,13 @@ Against the **GreatLibraryTesting** Supabase project — same migrations,
 throwaway data, nothing real in it. Same idea as a sub-prod instance:
 migrations get rehearsed there before they touch the live database,
 which is worth having regardless of tests.
+
+That now includes the journeys. They used to run against a dev server
+inheriting `.env`, which is **production** — survivable only while every
+journey was read-only, and a way to write to the live site the moment one
+wasn't. Playwright now starts its own dev server on port **5174** with
+the test project's keys, and never reuses one already running, because a
+`npm run dev` on 5173 is pointed at production.
 
 Its URL and keys live in `.env.test`, which is gitignored and never
 committed. The tests refuse to run at all if that file points at the
@@ -140,7 +179,7 @@ npm run test:e2e # journeys only — starts the dev server itself
 - [[browsing-and-voting]] — *Working*
 - [[public-profiles]] — *Working*
 - [[claiming-your-page]] — *Half-built*
-- [[attribution-and-verification]] — *Not started*
+- [[attribution-and-verification]] — *Half-built*
 - [[moderation-and-cleanup]] — *Half-built*
 - [[keeping-content-fresh]] — *Not started*
 

@@ -8,10 +8,11 @@ status: Working
 **What it's for.** A page per identity — person or entity — showing what
 they made and what they submitted, at a stable, readable URL.
 
-**Where it stands.** Fully working for reading. There is no UI anywhere
-that lets a submission actually be attributed to a creator (see
-[[attribution-and-verification]]), so in practice the "content by" section
-on every profile page is empty today.
+**Where it stands.** Working. The "content by" section on every profile
+page was empty until 2026-08-10 because nothing in the app could create
+an attribution; a submitter can now credit whoever made the content (see
+[[attribution-and-verification]]), so the section fills up as people use
+it.
 
 ## Stories
 

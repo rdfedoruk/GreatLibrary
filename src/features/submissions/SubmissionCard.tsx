@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { VoteControl } from '../votes'
+import { tagSlug } from '../tags'
 import type { SubmissionListItem } from './api'
 import './submissions.css'
 
@@ -77,14 +78,18 @@ export function SubmissionCard({
           · {date}
         </p>
         {item.tags.length > 0 && (
+          // Each tag is the way into everything else carrying it — the chips
+          // on the cards are the only entrance to a filtered feed.
           <ul className="submission-tags">
             {[...medium, ...modules].map((tag) => (
-              <li
-                key={tag.id}
-                className={`tag tag-${tag.dimension}`}
-                title={tag.dimension === 'medium' ? 'Medium' : 'Module'}
-              >
-                {tag.name}
+              <li key={tag.id}>
+                <Link
+                  className={`tag tag-${tag.dimension}`}
+                  to={`/?tag=${tagSlug(tag.name)}`}
+                  title={`Show everything tagged ${tag.name}`}
+                >
+                  {tag.name}
+                </Link>
               </li>
             ))}
           </ul>

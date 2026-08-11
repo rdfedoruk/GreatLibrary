@@ -26,9 +26,9 @@ this person/organization made," not just "here's an account."
 
 ## Notes
 
-As of now there is no UI anywhere in the app that creates an attribution
-row, so this section is empty for every real profile in production — the
-display logic is built and correct, but has nothing to show. See
+This section was correct but empty for every real profile until
+2026-08-10, because nothing in the app could create an attribution row.
+Submitters can now credit a creator, so it has something to show. See
 [[attribute-a-profile-to-a-submission]].
 
 ## Related
