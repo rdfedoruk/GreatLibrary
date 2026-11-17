@@ -38,14 +38,14 @@ test.describe('suggesting and approving a tag', () => {
     await expect(cardFor(page)).toBeVisible()
 
     // Approve it on the tags page.
-    await page.getByRole('link', { name: 'Tags', exact: true }).click()
+    await page.getByRole('tab', { name: 'Tags' }).click()
     const row = page.locator('.tag-row').filter({ hasText: tagName })
     await row.getByRole('button', { name: 'Approve' }).click()
     await expect(row.getByRole('button', { name: 'Unapprove' })).toBeVisible()
 
     // It now carries an approved tag, so it has left the bounties…
     await page.getByRole('link', { name: 'Curation Bounties' }).click()
-    await expect(page.getByRole('heading', { name: 'Curation Bounties' })).toBeVisible()
+    await expect(page.getByRole('tab', { name: /Untagged/ })).toBeVisible()
     await expect(page.getByText('Loading the library…')).toHaveCount(0)
     await expect(cardFor(page)).toHaveCount(0)
 
@@ -73,7 +73,7 @@ test.describe('suggesting and approving a tag', () => {
     await card.getByRole('button', { name: `Remove tag ${typo}` }).click()
     await expect(card.locator('.tag', { hasText: typo })).toHaveCount(0)
 
-    await page.getByRole('link', { name: 'Tags', exact: true }).click()
+    await page.goto('/bounties#tags')
     await expect(page.getByRole('heading', { name: /^Approved/ })).toBeVisible()
     await expect(page.locator('.tag-row').filter({ hasText: typo })).toHaveCount(0)
   })

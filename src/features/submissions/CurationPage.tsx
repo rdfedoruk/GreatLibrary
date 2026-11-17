@@ -80,21 +80,17 @@ export function CurationPage({
       />
 
       <section className="curation-card" aria-label="Curation">
-        <header className="curation-card-head">
-          <p className="eyebrow">Community record</p>
-          <h2>Curation</h2>
-        </header>
-        <TagSections
-          submissionId={item.id}
-          tags={item.tags}
-          canEdit={signedIn}
-          onChange={(tags: SubmissionTag[]) => update({ tags })}
-        />
         <CreditsSection
           submissionId={item.id}
           creators={item.creators}
           canEdit={signedIn}
           onChanged={(creators: ProfileRef[]) => update({ creators })}
+        />
+        <TagSections
+          submissionId={item.id}
+          tags={item.tags}
+          canEdit={signedIn}
+          onChange={(tags: SubmissionTag[]) => update({ tags })}
         />
       </section>
 
@@ -117,8 +113,6 @@ function EntryHeader({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const medium = item.tags.find((t) => t.type === 'medium')
-
   const save = (event: FormEvent) => {
     event.preventDefault()
     setBusy(true)
@@ -140,8 +134,6 @@ function EntryHeader({
         <img className="entry-thumb" src={item.thumbnailUrl} alt="" />
       )}
       <div className="entry-body">
-        {medium && <p className="eyebrow">{medium.name}</p>}
-
         {editing ? (
           <form className="entry-title-form" onSubmit={save}>
             <input

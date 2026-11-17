@@ -218,7 +218,6 @@ export function TagsPage({ signedIn }: { signedIn: boolean }) {
 
   return (
     <div className="tags-page">
-      <h2>Tags</h2>
       <form className="tag-create" onSubmit={create}>
         <input
           type="text"

@@ -136,21 +136,24 @@ export function CreditsSection({
   return (
     <section className="curation-section" aria-label="People and organizations">
       <div className="curation-head">
-        <div>
-          <h3>People &amp; organizations</h3>
-          <p className="curation-hint">Who created, hosted, published, or appeared</p>
-        </div>
+        <h3>People &amp; organizations</h3>
         {canEdit && (
           <button
             type="button"
-            className="quiet curation-small-button"
+            className="curation-icon-button"
+            aria-label={open ? 'Done with people and organizations' : 'Edit people and organizations'}
             aria-expanded={open}
+            title={open ? 'Done' : 'Edit'}
             onClick={() => {
               setOpen(!open)
               setQuery('')
             }}
           >
-            {open ? 'Done' : 'Add attribution'}
+            {open ? '✓' : (
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="action-icon">
+                <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              </svg>
+            )}
           </button>
         )}
       </div>

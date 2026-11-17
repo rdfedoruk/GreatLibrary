@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   BrowserRouter,
   Link,
+  Navigate,
   NavLink,
   Route,
   Routes,
@@ -17,7 +18,7 @@ import {
   SubmitForm,
 } from './features/submissions'
 import { ProfilePage } from './features/profiles'
-import { TagsPage, fetchTags, tagSlug, type Tag } from './features/tags'
+import { fetchTags, tagSlug, type Tag } from './features/tags'
 import { PrivacyPage } from './features/privacy'
 
 function EmailSignIn() {
@@ -183,7 +184,6 @@ function App() {
           Feed
         </NavLink>
         <NavLink to="/bounties">Curation Bounties</NavLink>
-        <NavLink to="/tags">Tags</NavLink>
       </nav>
 
       <Routes>
@@ -207,9 +207,15 @@ function App() {
         />
         <Route
           path="/bounties"
-          element={<BountiesPage currentUserId={session?.user.id ?? null} />}
+          element={
+            <BountiesPage
+              currentUserId={session?.user.id ?? null}
+              signedIn={session !== null}
+            />
+          }
         />
-        <Route path="/tags" element={<TagsPage signedIn={session !== null} />} />
+        {/* Tags moved into a Curation Bounties tab; old links still land there. */}
+        <Route path="/tags" element={<Navigate to="/bounties#tags" replace />} />
         <Route
           path="/profile/:slug"
           element={<ProfilePage currentUserId={session?.user.id ?? null} />}

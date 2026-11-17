@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { VoteControl } from '../votes'
 import { SubmissionTags } from '../tags'
-import type { SubmissionListItem, SubmissionTag } from './api'
+import { CreditsSection } from './CreditsSection'
+import type { ProfileRef, SubmissionListItem, SubmissionTag } from './api'
 import { ago, fullDate, hostOf } from './format'
 import './submissions.css'
 
@@ -11,6 +12,8 @@ export function SubmissionCard({
   currentUserId,
   showDiscussLink = true,
   onTagsChanged,
+  onCreatorsChanged,
+  done,
 }: {
   item: SubmissionListItem
   currentUserId: string | null
@@ -21,11 +24,15 @@ export function SubmissionCard({
   // Told when someone adds or removes a tag here, for a page whose contents
   // depend on the tags (Curation Bounties).
   onTagsChanged?: (tags: SubmissionTag[]) => void
+  // Given, the card carries the credits editor too (the Unattributed bounty).
+  onCreatorsChanged?: (creators: ProfileRef[]) => void
+  // A Curation Bounties card worked on this visit: kept, faded, with this word.
+  done?: string
 }) {
   const [tags, setTags] = useState(item.tags)
 
   return (
-    <article className="submission-card">
+    <article className={`submission-card${done ? ' bounty-done' : ''}`}>
       {item.thumbnailUrl && (
         <img
           className="submission-thumb"
@@ -35,6 +42,7 @@ export function SubmissionCard({
         />
       )}
       <div className="submission-body">
+        {done && <span className="bounty-done-label">{done} ✓</span>}
         <a
           className="submission-link"
           href={item.url}
@@ -121,6 +129,14 @@ export function SubmissionCard({
             </>
           }
         />
+        {onCreatorsChanged && (
+          <CreditsSection
+            submissionId={item.id}
+            creators={item.creators}
+            canEdit={currentUserId !== null}
+            onChanged={onCreatorsChanged}
+          />
+        )}
       </div>
     </article>
   )
