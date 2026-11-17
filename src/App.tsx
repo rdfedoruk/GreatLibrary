@@ -18,6 +18,7 @@ import {
 } from './features/submissions'
 import { ProfilePage } from './features/profiles'
 import { TagsPage, fetchTags, tagSlug, type Tag } from './features/tags'
+import { PrivacyPage } from './features/privacy'
 
 function EmailSignIn() {
   const [email, setEmail] = useState('')
@@ -213,7 +214,12 @@ function App() {
           path="/profile/:slug"
           element={<ProfilePage currentUserId={session?.user.id ?? null} />}
         />
+        <Route path="/privacy" element={<PrivacyPage />} />
       </Routes>
+
+      <footer className="site-footer">
+        <Link to="/privacy">Privacy</Link>
+      </footer>
     </main>
   )
 }
