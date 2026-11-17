@@ -1,0 +1,12 @@
+.privacy {
+  max-width: 680px;
+  line-height: 1.6;
+}
+
+.privacy h3 {
+  margin-top: 28px;
+}
+
+.privacy-updated {
+  color: var(--muted);
+}
