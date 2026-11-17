@@ -23,13 +23,7 @@ The only place work is tracked. Finished lines get deleted, not ticked.
 
 ## Building now, in order
 
-1. **Suggested profiles — built, not yet live.** A name typed in that has no profile yet becomes
-   a *suggested* profile: shown as an outline chip, its page says
-   "awaiting approval". A new Profiles tab in Curation Bounties lists them
-   with Rename, Approve, Merge into an existing profile (its credits move over,
-   it is deleted), and Delete. One no entry credits any more deletes
-   itself. Profiles made by signing up are approved from the start.
-2. **New submit form:** Link, Attributions (search profiles, or type a new
+1. **New submit form:** Link, Attributions (search profiles, or type a new
    name), Tags. The description box goes; the title comes from the link.
 
 ## Left out on purpose
