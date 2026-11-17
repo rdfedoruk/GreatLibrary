@@ -28,7 +28,8 @@ Don't create new tracking or planning documents. If something needs recording, i
 ## How it's built
 
 - **Website:** React + TypeScript, built with Vite, hosted on Vercel at greatlibrary.theduke.digital.
-- **Database and sign-in:** Supabase (Postgres). Sign-in is Google or an emailed link; no passwords.
+- **Database, sign-in and image storage:** Supabase (Postgres). Sign-in is Google or an emailed link; no passwords.
+- **One server-side piece:** `api/thumbnail.ts`, run by Vercel. Submitting a link goes through it, because working out a title and thumbnail means visiting other sites and drawing an image. Its rules (`api/_thumbnail/`) are copied from the Thumbnailer project and are tuned there, not here. It acts as the signed-in person and holds no secret keys. `npm run dev` serves it locally too.
 - **Tests:** `npm test` runs the database-rule checks (Vitest) and the click-through journeys (Playwright) against a separate test database, never production.
 
 Rules that keep one feature from breaking another:

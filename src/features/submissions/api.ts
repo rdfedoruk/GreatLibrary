@@ -15,7 +15,12 @@ export interface ProfileRef {
 export interface SubmissionListItem {
   id: string
   url: string
+  /** What the entry is called: its title, or its description if it has none. */
+  title: string
+  /** The submitter's own words, when there are any beyond the title. */
   description: string
+  /** Address of the thumbnail image; null for entries from before thumbnails. */
+  thumbnailUrl: string | null
   source_site: SourceSite
   created_at: string
   submitter: ProfileRef
@@ -38,24 +43,33 @@ export interface NewSubmission {
   description: string
 }
 
-// Tags are not part of submitting: they are suggested afterwards, on the
-// entry itself, by anyone.
-export async function createSubmission(
-  input: NewSubmission,
-  userId: string,
-): Promise<void> {
-  const { error } = await supabase.from('submissions').insert({
-    url: input.url,
-    description: input.description,
-    source_site: 'manual',
-    submitted_by: userId,
-  })
+// Submitting goes through the site's one server-side piece (api/thumbnail.ts),
+// which visits the link, works out its title and thumbnail, and creates the
+// entry as the signed-in person. Tags are not part of submitting: they are
+// suggested afterwards, on the entry itself, by anyone.
+export async function createSubmission(input: NewSubmission): Promise<void> {
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+  if (!token) throw new Error('Sign in to submit a link.')
 
-  if (error) {
-    if (error.code === '23505') {
-      throw new Error('That URL is already in the library.')
-    }
-    throw new Error(error.message)
+  let response: Response
+  try {
+    response = await fetch('/api/thumbnail', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(input),
+    })
+  } catch {
+    throw new Error('Could not reach the site. Check your connection and try again.')
+  }
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as {
+      error?: string
+    } | null
+    throw new Error(body?.error ?? 'Something went wrong. Try again.')
   }
 }
 
@@ -91,7 +105,7 @@ export async function removeAttribution(
   if (error) throw new Error(error.message)
 }
 
-const SELECT = `id, url, description, source_site, created_at,
+const SELECT = `id, url, title, description, thumbnail_path, source_site, created_at,
    submitter:profiles!submissions_submitted_by_fkey ( id, display_name, slug ),
    submission_attributions ( profiles ( id, display_name, slug ) ),
    submission_tags ( tags ( id, name, status, type ) ),
@@ -101,7 +115,9 @@ const SELECT = `id, url, description, source_site, created_at,
 type SubmissionRow = {
   id: string
   url: string
+  title: string | null
   description: string
+  thumbnail_path: string | null
   source_site: SourceSite
   created_at: string
   submitter: { id: string; display_name: string; slug: string }
@@ -122,10 +138,17 @@ function toItem(
   const own = currentUserId
     ? row.votes.find((v) => v.user_id === currentUserId)
     : undefined
+  const title = row.title?.trim() || row.description
   return {
     id: row.id,
     url: row.url,
-    description: row.description,
+    title,
+    // Not repeated when it only says what the title already says.
+    description: row.description === title ? '' : row.description,
+    thumbnailUrl: row.thumbnail_path
+      ? supabase.storage.from('thumbnails').getPublicUrl(row.thumbnail_path).data
+          .publicUrl
+      : null,
     source_site: row.source_site,
     created_at: row.created_at,
     submitter: {

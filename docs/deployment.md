@@ -24,6 +24,12 @@ it. The live site ignores a column it doesn't know about, so schema-ahead
 is harmless. Code-ahead is an outage — the app queries a column that
 isn't there and the feature fails with a 400.
 
+**That only holds for changes that add things.** A migration that removes
+or renames a column the live code still reads breaks the live site the
+moment it is applied — on 2026-11-16 dropping `tags.dimension` took the
+live feed down until the new code merged. For those, have the pull request
+open and ready first, apply the migration, and merge straight away.
+
 ## Pushing a migration to production
 
 ```

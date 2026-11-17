@@ -3,7 +3,6 @@ import { createSubmission } from './api'
 import './submissions.css'
 
 interface SubmitFormProps {
-  userId: string
   onSubmitted: () => void
 }
 
@@ -16,7 +15,7 @@ function validUrl(value: string): boolean {
   }
 }
 
-export function SubmitForm({ userId, onSubmitted }: SubmitFormProps) {
+export function SubmitForm({ onSubmitted }: SubmitFormProps) {
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
@@ -41,16 +40,9 @@ export function SubmitForm({ userId, onSubmitted }: SubmitFormProps) {
       setError('Enter a full link, starting with http:// or https://')
       return
     }
-    if (!trimmedDescription) {
-      setError('A short description is required.')
-      return
-    }
     setError(null)
     setBusy(true)
-    createSubmission(
-      { url: trimmedUrl, description: trimmedDescription },
-      userId,
-    )
+    createSubmission({ url: trimmedUrl, description: trimmedDescription })
       .then(() => {
         setUrl('')
         setDescription('')
@@ -77,19 +69,18 @@ export function SubmitForm({ userId, onSubmitted }: SubmitFormProps) {
         />
       </label>
       <label>
-        Description
+        Description (optional)
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="What is it, and why is it worth someone’s time?"
-          rows={3}
-          required
+          placeholder="Why is it worth someone’s time? The title and thumbnail are worked out from the link."
+          rows={2}
         />
       </label>
       {error && <p className="submit-error">{error}</p>}
       <div className="submit-actions">
         <button type="submit" disabled={busy}>
-          {busy ? 'Submitting…' : 'Submit'}
+          {busy ? 'Working…' : 'Submit'}
         </button>
         <button type="button" className="quiet" disabled={busy} onClick={() => setOpen(false)}>
           Cancel

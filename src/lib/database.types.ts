@@ -343,14 +343,24 @@ export type Database = {
           id: string
           source_site: Database["public"]["Enums"]["source_site"]
           submitted_by: string
+          thumbnail_notes: string | null
+          thumbnail_path: string | null
+          thumbnail_rubric: string | null
+          thumbnail_strategy: string | null
+          title: string | null
           url: string
         }
         Insert: {
           created_at?: string
-          description: string
+          description?: string
           id?: string
           source_site: Database["public"]["Enums"]["source_site"]
           submitted_by: string
+          thumbnail_notes?: string | null
+          thumbnail_path?: string | null
+          thumbnail_rubric?: string | null
+          thumbnail_strategy?: string | null
+          title?: string | null
           url: string
         }
         Update: {
@@ -359,6 +369,11 @@ export type Database = {
           id?: string
           source_site?: Database["public"]["Enums"]["source_site"]
           submitted_by?: string
+          thumbnail_notes?: string | null
+          thumbnail_path?: string | null
+          thumbnail_rubric?: string | null
+          thumbnail_strategy?: string | null
+          title?: string | null
           url?: string
         }
         Relationships: [

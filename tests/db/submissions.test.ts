@@ -1,7 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { anonClient, createTestUser, deleteTestUsers, type TestUser } from './helpers'
+import {
+  admin,
+  anonClient,
+  createTestUser,
+  deleteTestUsers,
+  type TestUser,
+} from './helpers'
 
-// Rules under test, from docs/current-state.md:
+// Rules under test:
 //   "A URL can only be submitted once."
 //   "Reads are public. Writes are own-row only."
 
@@ -43,7 +49,7 @@ describe('submissions', () => {
     expect(second.error?.code).toBe('23505')
   })
 
-  it('refuses an empty description', async () => {
+  it('refuses an entry with neither a title nor a description', async () => {
     const { error } = await member.client.from('submissions').insert({
       url: `https://example.com/${crypto.randomUUID()}`,
       description: '   ',
@@ -51,6 +57,90 @@ describe('submissions', () => {
       submitted_by: member.profileId,
     })
     expect(error?.code).toBe('23514')
+  })
+
+  it('accepts an entry with a title and no description', async () => {
+    const { data, error } = await member.client
+      .from('submissions')
+      .insert({
+        url: `https://example.com/${crypto.randomUUID()}`,
+        title: 'A title worked out from the link',
+        source_site: 'manual',
+        submitted_by: member.profileId,
+        thumbnail_path: 'somewhere.png',
+      })
+      .select('title, description, thumbnail_path')
+      .single()
+    expect(error).toBeNull()
+    expect(data).toEqual({
+      title: 'A title worked out from the link',
+      description: '',
+      thumbnail_path: 'somewhere.png',
+    })
+  })
+
+  describe('thumbnail images', () => {
+    // The smallest valid PNG: one transparent pixel.
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      'base64',
+    )
+    const made: string[] = []
+
+    afterAll(async () => {
+      if (made.length > 0) await admin.storage.from('thumbnails').remove(made)
+    })
+
+    it('lets a signed-in member add an image, and anyone view it', async () => {
+      const path = `test-${crypto.randomUUID()}.png`
+      const { error } = await member.client.storage
+        .from('thumbnails')
+        .upload(path, png, { contentType: 'image/png' })
+      expect(error).toBeNull()
+      made.push(path)
+
+      const { data } = anonClient().storage.from('thumbnails').getPublicUrl(path)
+      const response = await fetch(data.publicUrl)
+      expect(response.status).toBe(200)
+      expect(response.headers.get('content-type')).toBe('image/png')
+    })
+
+    it('refuses an image from a signed-out visitor', async () => {
+      const path = `test-${crypto.randomUUID()}.png`
+      const { error } = await anonClient()
+        .storage.from('thumbnails')
+        .upload(path, png, { contentType: 'image/png' })
+      expect(error).not.toBeNull()
+    })
+
+    it('refuses a file that is not an image', async () => {
+      const path = `test-${crypto.randomUUID()}.html`
+      const { error } = await member.client.storage
+        .from('thumbnails')
+        .upload(path, Buffer.from('<script>alert(1)</script>'), {
+          contentType: 'text/html',
+        })
+      expect(error).not.toBeNull()
+    })
+
+    it('lets a member remove their own image but not someone else‘s', async () => {
+      const path = `test-${crypto.randomUUID()}.png`
+      await member.client.storage
+        .from('thumbnails')
+        .upload(path, png, { contentType: 'image/png' })
+      made.push(path)
+      const other = await createTestUser('Image Remover')
+
+      await other.client.storage.from('thumbnails').remove([path])
+      const still = await fetch(
+        anonClient().storage.from('thumbnails').getPublicUrl(path).data.publicUrl,
+        { cache: 'no-store' },
+      )
+      expect(still.status).toBe(200)
+
+      const { data } = await member.client.storage.from('thumbnails').remove([path])
+      expect(data).toHaveLength(1)
+    })
   })
 
   it('refuses a submission filed under someone else‘s name', async () => {
