@@ -54,7 +54,9 @@ test.describe('filtering the library by tag', () => {
 
     // The card keeps all of its own tags — the filter narrows the list, not
     // what each entry says about itself.
-    await expect(page.locator('.submission-tags').first()).toContainText('Video')
+    await expect(
+      cardFor(page, tagged).getByRole('link', { name: 'Video', exact: true }),
+    ).toBeVisible()
 
     await page.getByRole('link', { name: 'Show everything' }).click()
     await expect(page).toHaveURL(/\/$/)

@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
 import { Link } from 'react-router-dom'
 import {
   TAG_TYPES,
@@ -143,16 +149,58 @@ function Tagger({
   )
 }
 
+/** Line icons for the media. A medium with no icon here shows its name. */
+const MEDIUM_ICONS: Record<string, ReactNode> = {
+  video: (
+    <>
+      <path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 11" />
+      <rect x="2" y="6" width="14" height="12" rx="2" />
+    </>
+  ),
+  podcast: (
+    <>
+      <rect x="9" y="2" width="6" height="12" rx="3" />
+      <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+      <path d="M12 18v4" />
+    </>
+  ),
+  article: (
+    <>
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" />
+      <path d="M14 2v5h5" />
+      <path d="M8 13h8M8 17h8M8 9h2" />
+    </>
+  ),
+  repo: (
+    <>
+      <circle cx="6" cy="6" r="2.5" />
+      <circle cx="6" cy="18" r="2.5" />
+      <circle cx="18" cy="8" r="2.5" />
+      <path d="M6 8.5v7M18 10.5c0 4-6 3-11 5.5" />
+    </>
+  ),
+}
+
+/** How many plain tags a feed card shows before folding the rest into "+N". */
+const SHOWN_ON_CARD = 2
+
 /**
  * The tags on one entry. Each chip is a link into a feed of everything
- * sharing the tag. Signed in, the tag button opens the type-ahead, and while
- * it is open every chip gets an × to take it off.
+ * sharing the tag; media show as icons. On a feed card (`compact`) only the
+ * first two plain tags show, and the rest, versions included, fold into
+ * "+N". Signed in, the tag button opens the type-ahead, and while it is open
+ * every tag shows with an × to take it off.
+ *
+ * `actions` sits at the right-hand end of the tag row; the card puts votes
+ * and the comment count there.
  */
 export function SubmissionTags({
   submissionId,
   title,
   tags,
   canEdit,
+  compact = false,
+  actions,
   onChange,
 }: {
   submissionId: string
@@ -160,9 +208,12 @@ export function SubmissionTags({
   title: string
   tags: Tag[]
   canEdit: boolean
+  compact?: boolean
+  actions?: ReactNode
   onChange: (tags: Tag[]) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const sorted = [...tags].sort(
@@ -191,6 +242,19 @@ export function SubmissionTags({
       )
   }
 
+  const removeButton = (tag: Tag) =>
+    open && (
+      <button
+        type="button"
+        className="tag-x"
+        aria-label={`Remove tag ${tag.name}`}
+        title={`Remove “${tag.name}”`}
+        onClick={() => remove(tag)}
+      >
+        ×
+      </button>
+    )
+
   const chip = (tag: Tag) => (
     <span
       key={tag.id}
@@ -198,7 +262,7 @@ export function SubmissionTags({
       title={
         tag.status === 'suggested'
           ? 'Suggested tag, not yet approved'
-          : 'Approved tag'
+          : `Approved ${tagTypeLabel(tag.type).toLowerCase()}`
       }
     >
       <Link
@@ -208,51 +272,85 @@ export function SubmissionTags({
       >
         {tag.name}
       </Link>
-      {open && (
-        <button
-          type="button"
-          className="tag-x"
-          aria-label={`Remove tag ${tag.name}`}
-          title={`Remove “${tag.name}”`}
-          onClick={() => remove(tag)}
-        >
-          ×
-        </button>
-      )}
+      {removeButton(tag)}
     </span>
   )
 
-  const general = sorted.filter((t) => t.type === 'general')
+  const mediumChip = (tag: Tag) => {
+    const icon = MEDIUM_ICONS[tag.name.toLowerCase()]
+    const note = tag.status === 'suggested' ? ' (suggested)' : ''
+    return (
+      <span key={tag.id} className={`tag medium ${tag.status}`}>
+        <Link
+          className="tag-name"
+          to={`/?tag=${tagSlug(tag.name)}`}
+          aria-label={icon ? tag.name : undefined}
+          title={`${tag.name}${note}: show everything in this medium`}
+        >
+          {icon ? (
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="medium-icon">
+              {icon}
+            </svg>
+          ) : (
+            tag.name
+          )}
+        </Link>
+        {removeButton(tag)}
+      </span>
+    )
+  }
+
+  const media = sorted.filter((t) => t.type === 'medium')
+  // Plain tags first, versions after, so on a card the versions fold away.
+  const others = [
+    ...sorted.filter((t) => t.type === 'general'),
+    ...sorted.filter((t) => t.type !== 'general' && t.type !== 'medium'),
+  ]
+  const showAll = !compact || expanded || open
+  const shown = showAll ? others : others.slice(0, SHOWN_ON_CARD)
+  const folded = others.length - shown.length
 
   return (
     <div className="submission-tags">
-      <div className="tag-line">
-        {general.map(chip)}
-        {tags.length === 0 && <span className="no-tags">No tags yet</span>}
-        {canEdit && (
-          <button
-            type="button"
-            className="tag-button"
-            aria-label={`Suggest tags for ${title}`}
-            aria-expanded={open}
-            title="Suggest tags"
-            onClick={() => setOpen(!open)}
-          >
-            🏷️
-          </button>
-        )}
+      <div className="tag-bar">
+        <div className="tag-line">
+          {shown.map(chip)}
+          {folded > 0 && (
+            <button
+              type="button"
+              className="tag-more"
+              title={others
+                .slice(SHOWN_ON_CARD)
+                .map((t) => t.name)
+                .join(', ')}
+              aria-label={`Show ${folded} more tag${folded === 1 ? '' : 's'}`}
+              onClick={() => setExpanded(true)}
+            >
+              +{folded}
+            </button>
+          )}
+          {media.map(mediumChip)}
+          {tags.length === 0 && <span className="no-tags">No tags yet</span>}
+        </div>
+        <div className="tag-actions">
+          {actions}
+          {canEdit && (
+            <button
+              type="button"
+              className="tag-button"
+              aria-label={`Suggest tags for ${title}`}
+              aria-expanded={open}
+              title="Suggest tags"
+              onClick={() => setOpen(!open)}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="action-icon">
+                <path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z" />
+                <circle cx="7.5" cy="7.5" r="1.2" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
-      {/* Every other type gets its own labelled line, only when the entry
-          has a tag of that type. */}
-      {TAG_TYPES.filter((type) => type.id !== 'general').map((type) => {
-        const ofType = sorted.filter((t) => t.type === type.id)
-        return ofType.length > 0 ? (
-          <div className="tag-line" key={type.id}>
-            <span className="tag-type-label">{type.label}:</span>
-            {ofType.map(chip)}
-          </div>
-        ) : null
-      })}
       {open && (
         <Tagger
           label={`Add a tag to ${title}`}

@@ -1,16 +1,16 @@
 .vote-control {
-  display: flex;
-  flex-direction: column;
+  display: inline-flex;
   align-items: center;
   gap: 2px;
-  min-width: 2.5em;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
   flex: none;
 }
 
 .shell button.vote-btn {
-  font-size: 13px;
-  line-height: 1;
-  padding: 3px 7px;
+  display: inline-flex;
+  padding: 4px;
   border-radius: 6px;
   color: var(--muted);
   background: transparent;
@@ -19,7 +19,7 @@
 
 .shell button.vote-btn:hover:not(:disabled) {
   color: var(--text);
-  border-color: var(--line);
+  background: var(--bg);
   filter: none;
 }
 
@@ -36,7 +36,9 @@
 }
 
 .vote-score {
-  font-size: 14px;
+  min-width: 2.2em;
+  text-align: center;
+  font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }

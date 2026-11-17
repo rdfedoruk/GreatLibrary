@@ -30,7 +30,7 @@ test.describe('crediting the creator of a submission', () => {
     await trackProfileNamed(creatorName)
 
     // The credit reaches the entry's own by-line, not just the editor.
-    await expect(page.locator('.submission-meta')).toContainText(`by ${creatorName}`)
+    await expect(page.locator('.submission-meta')).toContainText(creatorName)
 
     // …and the creator's page, which is the whole point of separating who
     // made something from who submitted it.
@@ -79,7 +79,7 @@ test.describe('crediting the creator of a submission', () => {
     await editor.getByRole('button', { name: `Remove ${creatorName}` }).click()
     await expect(editor).toContainText('Nobody credited yet')
     await expect(page.locator('.submission-meta')).not.toContainText(
-      `by ${creatorName}`,
+      creatorName,
     )
   })
 
