@@ -113,6 +113,7 @@ export async function seedProfile(displayName: string): Promise<string> {
     .insert({
       display_name: displayName,
       type: 'person',
+      status: 'approved',
       slug: `journey-${crypto.randomUUID()}`,
     })
     .select('id')

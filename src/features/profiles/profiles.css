@@ -36,3 +36,132 @@
   font-weight: 600;
   color: var(--muted);
 }
+
+.profile-pending {
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+
+/* Profile chips: approved = solid light slate, dark text. Suggested = the
+   same colour as text and border only, as with tags. */
+.profile-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  background: var(--profile);
+  color: var(--profile-ink);
+  border: 1px solid var(--profile);
+}
+
+.profile-chip.suggested {
+  background: transparent;
+  color: var(--profile);
+}
+
+a.profile-chip:hover {
+  text-decoration: underline;
+}
+
+.suggested-profiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.suggested-profile {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.suggested-profile-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.suggested-profile-merge {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 320px;
+}
+
+.suggested-profile-merge input {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--bg);
+}
+
+.suggested-profile-choices {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.suggested-profile-choices li.none {
+  color: var(--muted);
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.shell .suggested-profile-choices button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  padding: 6px 8px;
+}
+
+.shell .suggested-profile-choices button:hover {
+  background: var(--surface);
+  filter: none;
+}
+
+.suggested-profile-credits {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+.suggested-profile-credits.none {
+  padding-left: 0;
+  color: var(--muted);
+}
+
+.suggested-profile-error {
+  color: var(--danger);
+}
+
+.suggested-profile-name {
+  width: 200px;
+  padding: 6px 10px;
+  background: var(--bg);
+}

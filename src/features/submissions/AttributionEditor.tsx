@@ -68,7 +68,12 @@ export function AttributionEditor({
       .then(() => {
         onChanged([
           ...creators,
-          { id: profile.id, name: profile.display_name, slug: profile.slug },
+          {
+            id: profile.id,
+            name: profile.display_name,
+            slug: profile.slug,
+            status: profile.status,
+          },
         ])
         setQuery('')
         setMatches([])
@@ -88,7 +93,12 @@ export function AttributionEditor({
         attributeProfile(submissionId, profile.id).then(() => {
           onChanged([
             ...creators,
-            { id: profile.id, name: profile.display_name, slug: profile.slug },
+            {
+              id: profile.id,
+              name: profile.display_name,
+              slug: profile.slug,
+              status: profile.status,
+            },
           ])
           setQuery('')
           setMatches([])
@@ -126,7 +136,15 @@ export function AttributionEditor({
       {creators.length > 0 ? (
         <ul className="attribution-list">
           {creators.map((creator) => (
-            <li key={creator.id} className="attribution-chip">
+            <li
+              key={creator.id}
+              className={`attribution-chip ${creator.status}`}
+              title={
+                creator.status === 'suggested'
+                  ? 'Suggested: awaiting approval'
+                  : undefined
+              }
+            >
               <Link className="profile-link" to={`/profile/${creator.slug}`}>
                 {creator.name}
               </Link>
@@ -165,6 +183,9 @@ export function AttributionEditor({
               <li key={profile.id}>
                 <button type="button" disabled={busy} onClick={() => add(profile)}>
                   {profile.display_name}
+                  {profile.status === 'suggested' && (
+                    <span className="attribution-kind"> · suggested</span>
+                  )}
                   {profile.type === 'entity' && (
                     <span className="attribution-kind"> · entity</span>
                   )}
@@ -179,7 +200,7 @@ export function AttributionEditor({
                   disabled={busy}
                   onClick={addNew}
                 >
-                  Add “{trimmed}” as a new page
+                  Suggest “{trimmed}” as a new profile
                 </button>
               </li>
             )}

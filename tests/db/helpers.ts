@@ -91,6 +91,7 @@ export async function seedEntity(displayName = 'A Company'): Promise<string> {
     .insert({
       display_name: displayName,
       type: 'entity',
+      status: 'approved',
       slug: `entity-${crypto.randomUUID()}`,
     })
     .select('id')
