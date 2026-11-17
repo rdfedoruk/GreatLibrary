@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { VoteControl } from '../votes'
-import { tagSlug } from '../tags'
-import type { SubmissionListItem } from './api'
+import { SubmissionTags } from '../tags'
+import type { SubmissionListItem, SubmissionTag } from './api'
 import './submissions.css'
 
 const SOURCE_LABELS: Record<SubmissionListItem['source_site'], string> = {
@@ -24,20 +25,23 @@ export function SubmissionCard({
   item,
   currentUserId,
   showDiscussLink = true,
+  onTagsChanged,
 }: {
   item: SubmissionListItem
   currentUserId: string | null
   // Off on the discussion page itself, where the link would point at the
   // page you're already on.
   showDiscussLink?: boolean
+  // Told when someone adds or removes a tag here, for a page whose contents
+  // depend on the tags (Curation Bounties).
+  onTagsChanged?: (tags: SubmissionTag[]) => void
 }) {
+  const [tags, setTags] = useState(item.tags)
   const date = new Date(item.created_at).toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   })
-  const medium = item.tags.filter((t) => t.dimension === 'medium')
-  const modules = item.tags.filter((t) => t.dimension === 'module')
 
   return (
     <article className="submission-card">
@@ -77,23 +81,16 @@ export function SubmissionCard({
           </Link>{' '}
           · {date}
         </p>
-        {item.tags.length > 0 && (
-          // Each tag is the way into everything else carrying it — the chips
-          // on the cards are the only entrance to a filtered feed.
-          <ul className="submission-tags">
-            {[...medium, ...modules].map((tag) => (
-              <li key={tag.id}>
-                <Link
-                  className={`tag tag-${tag.dimension}`}
-                  to={`/?tag=${tagSlug(tag.name)}`}
-                  title={`Show everything tagged ${tag.name}`}
-                >
-                  {tag.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        <SubmissionTags
+          submissionId={item.id}
+          title={item.description}
+          tags={tags}
+          canEdit={currentUserId !== null}
+          onChange={(next) => {
+            setTags(next)
+            onTagsChanged?.(next)
+          }}
+        />
         {showDiscussLink && (
           // The title above leaves for the content itself, so discussion needs
           // its own way in.

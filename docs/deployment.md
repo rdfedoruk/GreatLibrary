@@ -44,8 +44,13 @@ isn't:
   it and the ref from `npx supabase projects list`.
 
 A VPN silently stalls port-5432 connections while leaving ordinary web
-traffic working, so the failure looks like Supabase being down. Turn it
-off, push, turn it back on.
+traffic working, so the failure looks like Supabase being down (`tls error
+... i/o timeout`). Swap `:5432` for `:6543` in the address and push again —
+that port gets through the VPN (worked 2026-11-16). Failing that, turn the
+VPN off, push, turn it back on.
+
+The CLI also prints a long Docker warning about a "migrations catalog".
+Ignore it; the line that matters is `Finished supabase db push`.
 
 ## Changing auth settings
 

@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react'
-import { TagPicker } from '../tags'
 import { createSubmission } from './api'
 import './submissions.css'
 
@@ -21,7 +20,6 @@ export function SubmitForm({ userId, onSubmitted }: SubmitFormProps) {
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
-  const [tagIds, setTagIds] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -50,13 +48,12 @@ export function SubmitForm({ userId, onSubmitted }: SubmitFormProps) {
     setError(null)
     setBusy(true)
     createSubmission(
-      { url: trimmedUrl, description: trimmedDescription, tagIds },
+      { url: trimmedUrl, description: trimmedDescription },
       userId,
     )
       .then(() => {
         setUrl('')
         setDescription('')
-        setTagIds([])
         setOpen(false)
         onSubmitted()
       })
@@ -89,13 +86,12 @@ export function SubmitForm({ userId, onSubmitted }: SubmitFormProps) {
           required
         />
       </label>
-      <TagPicker selected={tagIds} onChange={setTagIds} />
       {error && <p className="submit-error">{error}</p>}
       <div className="submit-actions">
         <button type="submit" disabled={busy}>
           {busy ? 'Submitting…' : 'Submit'}
         </button>
-        <button type="button" disabled={busy} onClick={() => setOpen(false)}>
+        <button type="button" className="quiet" disabled={busy} onClick={() => setOpen(false)}>
           Cancel
         </button>
       </div>

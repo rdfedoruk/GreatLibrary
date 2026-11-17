@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   BrowserRouter,
   Link,
+  NavLink,
   Route,
   Routes,
   useSearchParams,
@@ -9,13 +10,13 @@ import {
 import './App.css'
 import { signInWithEmail, signInWithGoogle, signOut, useSession } from './lib/auth'
 import {
+  BountiesPage,
   SubmissionList,
   SubmissionPage,
   SubmitForm,
 } from './features/submissions'
 import { ProfilePage } from './features/profiles'
-import { ClaimPage } from './features/claims'
-import { fetchTags, tagSlug, type Tag } from './features/tags'
+import { TagsPage, fetchTags, tagSlug, type Tag } from './features/tags'
 
 function EmailSignIn() {
   const [email, setEmail] = useState('')
@@ -41,7 +42,7 @@ function EmailSignIn() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <button type="submit" disabled={status === 'sending'}>
+      <button type="submit" className="quiet" disabled={status === 'sending'}>
         {status === 'sending' ? 'Sending…' : 'Continue with email'}
       </button>
       {status === 'error' && <span className="email-error">Something went wrong. Try again.</span>}
@@ -159,10 +160,7 @@ function App() {
               <span className="account-name">
                 {session.user.user_metadata.full_name ?? session.user.email}
               </span>
-              <Link className="claim-nav-link" to="/claim">
-                Claim your page
-              </Link>
-              <button type="button" onClick={() => void signOut()}>
+              <button type="button" className="quiet" onClick={() => void signOut()}>
                 Sign out
               </button>
             </>
@@ -177,6 +175,14 @@ function App() {
           )}
         </div>
       </header>
+
+      <nav className="site-nav" aria-label="Main">
+        <NavLink to="/" end>
+          Feed
+        </NavLink>
+        <NavLink to="/bounties">Curation Bounties</NavLink>
+        <NavLink to="/tags">Tags</NavLink>
+      </nav>
 
       <Routes>
         <Route
@@ -194,12 +200,13 @@ function App() {
           element={<SubmissionPage currentUserId={session?.user.id ?? null} />}
         />
         <Route
+          path="/bounties"
+          element={<BountiesPage currentUserId={session?.user.id ?? null} />}
+        />
+        <Route path="/tags" element={<TagsPage signedIn={session !== null} />} />
+        <Route
           path="/profile/:slug"
           element={<ProfilePage currentUserId={session?.user.id ?? null} />}
-        />
-        <Route
-          path="/claim"
-          element={<ClaimPage userId={session?.user.id ?? null} />}
         />
       </Routes>
     </main>

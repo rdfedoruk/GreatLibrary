@@ -139,6 +139,7 @@ function CommentRow({
           <div className="comment-form-actions">
             <button
               type="button"
+              className="quiet"
               disabled={busy}
               onClick={() => setEditing(false)}
             >
