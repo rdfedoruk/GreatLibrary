@@ -31,6 +31,10 @@ Nothing queued.
   feed still filters by one tag, by clicking its chip.
 - Fixing the public name of people who sign up by email link (it is
   their email address).
+- From the entry-page mockup, for later: roles on credits (Publisher,
+  Host), curation flags (Possibly outdated, Wrong info, Deprecated),
+  the "Recent curation" history, the "5 of 7 complete" / "Still needed"
+  checklist, and replies under comments.
 
 ## Loose ends
 

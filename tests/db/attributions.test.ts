@@ -10,7 +10,8 @@ import {
 
 // Rules under test, from migration 3 (submitters attribute their own
 // submissions) and migration 9 (members can create unclaimed person pages;
-// submitters can take an attribution back off).
+// submitters can take an attribution back off). Migration 15 widened crediting
+// to anyone signed in — see curation.test.ts.
 
 describe('attribution', () => {
   afterAll(deleteTestUsers)
@@ -27,22 +28,6 @@ describe('attribution', () => {
     expect(error).toBeNull()
   })
 
-  it('refuses a credit on someone else’s submission', async () => {
-    const owner = await createTestUser('Submission Owner')
-    const stranger = await createTestUser('Passing Stranger')
-    const submissionId = await seedSubmission(owner.profileId)
-    const creatorId = await seedEntity('Another Channel')
-
-    // The migration 6/7 rules would let this through only if the stranger
-    // were attributing *themselves*; crediting a third party is not theirs
-    // to do.
-    const { error } = await stranger.client
-      .from('submission_attributions')
-      .insert({ submission_id: submissionId, profile_id: creatorId })
-
-    expect(error).not.toBeNull()
-  })
-
   it('refuses a credit from a signed-out visitor', async () => {
     const member = await createTestUser('Quiet Submitter')
     const submissionId = await seedSubmission(member.profileId)
@@ -55,9 +40,8 @@ describe('attribution', () => {
     expect(error).not.toBeNull()
   })
 
-  it('lets a submitter take a credit back off, but not off someone else’s', async () => {
+  it('lets a submitter take a credit back off', async () => {
     const owner = await createTestUser('Undoing Submitter')
-    const stranger = await createTestUser('Meddler')
     const submissionId = await seedSubmission(owner.profileId)
     const creatorId = await seedEntity('Mistaken Credit')
 
@@ -65,20 +49,6 @@ describe('attribution', () => {
       .from('submission_attributions')
       .insert({ submission_id: submissionId, profile_id: creatorId })
     expect(insertError).toBeNull()
-
-    // A stranger's delete matches no visible row — the rule hides it rather
-    // than announcing it, so check the row survived.
-    await stranger.client
-      .from('submission_attributions')
-      .delete()
-      .eq('submission_id', submissionId)
-      .eq('profile_id', creatorId)
-
-    const stillThere = await admin
-      .from('submission_attributions')
-      .select('profile_id')
-      .eq('submission_id', submissionId)
-    expect(stillThere.data).toHaveLength(1)
 
     await owner.client
       .from('submission_attributions')

@@ -304,3 +304,10 @@
 .tag-picker .tagger {
   max-width: none;
 }
+
+/* On an entry's page a medium shows its icon and its name. */
+.tag.medium-labelled .tag-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}

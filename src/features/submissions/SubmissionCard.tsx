@@ -3,34 +3,8 @@ import { Link } from 'react-router-dom'
 import { VoteControl } from '../votes'
 import { SubmissionTags } from '../tags'
 import type { SubmissionListItem, SubmissionTag } from './api'
+import { ago, fullDate, hostOf } from './format'
 import './submissions.css'
-
-function hostOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '')
-  } catch {
-    return url
-  }
-}
-
-const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
-const STEPS: [Intl.RelativeTimeFormatUnit, number][] = [
-  ['year', 365 * 24 * 3600],
-  ['month', 30 * 24 * 3600],
-  ['week', 7 * 24 * 3600],
-  ['day', 24 * 3600],
-  ['hour', 3600],
-  ['minute', 60],
-]
-
-/** "2 days ago", "last month", "just now". */
-function ago(iso: string): string {
-  const seconds = (Date.now() - new Date(iso).getTime()) / 1000
-  for (const [unit, size] of STEPS) {
-    if (seconds >= size) return relative.format(-Math.floor(seconds / size), unit)
-  }
-  return 'just now'
-}
 
 export function SubmissionCard({
   item,
@@ -49,11 +23,6 @@ export function SubmissionCard({
   onTagsChanged?: (tags: SubmissionTag[]) => void
 }) {
   const [tags, setTags] = useState(item.tags)
-  const fullDate = new Date(item.created_at).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
 
   return (
     <article className="submission-card">
@@ -102,7 +71,7 @@ export function SubmissionCard({
           {' · '}
           {hostOf(item.url)}
           {' · '}
-          <time dateTime={item.created_at} title={fullDate}>
+          <time dateTime={item.created_at} title={fullDate(item.created_at)}>
             {ago(item.created_at)}
           </time>
         </p>

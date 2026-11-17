@@ -8,18 +8,20 @@ import {
 import { attributeProfile, removeAttribution, type ProfileRef } from './api'
 import './submissions.css'
 
-// Only the submitter sees this, so it lives on the submission's own page
-// rather than the feed — the feed would be a row of edit controls nobody but
-// one person can use.
+// Who made an entry, on its own page. Everyone sees the list; anyone signed
+// in can add and remove credits (migration 15).
 export function AttributionEditor({
   submissionId,
   creators,
+  canEdit,
   onChanged,
 }: {
   submissionId: string
   creators: ProfileRef[]
+  canEdit: boolean
   onChanged: (next: ProfileRef[]) => void
 }) {
+  const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [matches, setMatches] = useState<ProfileSearchResult[]>([])
   const [busy, setBusy] = useState(false)
@@ -130,8 +132,26 @@ export function AttributionEditor({
   }
 
   return (
-    <section className="attribution" aria-label="Who made this">
-      <h3 className="attribution-heading">Who made this?</h3>
+    <section className="curation-section attribution" aria-label="People and organizations">
+      <div className="curation-head">
+        <div>
+          <h3>People &amp; organizations</h3>
+          <p className="curation-hint">Who created, hosted, published, or appeared</p>
+        </div>
+        {canEdit && (
+          <button
+            type="button"
+            className="quiet curation-small-button"
+            aria-expanded={open}
+            onClick={() => {
+              setOpen(!open)
+              setQuery('')
+            }}
+          >
+            {open ? 'Done' : 'Add attribution'}
+          </button>
+        )}
+      </div>
 
       {creators.length > 0 ? (
         <ul className="attribution-list">
@@ -145,70 +165,84 @@ export function AttributionEditor({
                   : undefined
               }
             >
+              <span className="attribution-avatar" aria-hidden="true">
+                {initials(creator.name)}
+              </span>
               <Link className="profile-link" to={`/profile/${creator.slug}`}>
                 {creator.name}
               </Link>
-              <button
-                type="button"
-                className="attribution-remove"
-                title={`Remove ${creator.name}`}
-                aria-label={`Remove ${creator.name}`}
-                disabled={busy}
-                onClick={() => remove(creator)}
-              >
-                ×
-              </button>
+              {open && (
+                <button
+                  type="button"
+                  className="attribution-remove"
+                  title={`Remove ${creator.name}`}
+                  aria-label={`Remove ${creator.name}`}
+                  disabled={busy}
+                  onClick={() => remove(creator)}
+                >
+                  ×
+                </button>
+              )}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="attribution-status">
-          Nobody credited yet. You submitted this, so you can say who made it.
-        </p>
+        <p className="attribution-status">Nobody credited yet.</p>
       )}
 
-      <div className="attribution-search">
-        <input
-          type="text"
-          value={query}
-          disabled={busy}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder="Search a name, or type a new one…"
-          aria-label="Search for who made this"
-        />
-        {trimmed.length > 0 && (
-          <ul className="attribution-suggestions">
-            {suggestions.map((profile) => (
-              <li key={profile.id}>
-                <button type="button" disabled={busy} onClick={() => add(profile)}>
-                  {profile.display_name}
-                  {profile.status === 'suggested' && (
-                    <span className="attribution-kind"> · suggested</span>
-                  )}
-                  {profile.type === 'entity' && (
-                    <span className="attribution-kind"> · entity</span>
-                  )}
-                </button>
-              </li>
-            ))}
-            {!exactMatch && (
-              <li>
-                <button
-                  type="button"
-                  className="attribution-add-new"
-                  disabled={busy}
-                  onClick={addNew}
-                >
-                  Suggest “{trimmed}” as a new profile
-                </button>
-              </li>
-            )}
-          </ul>
-        )}
-      </div>
+      {open && (
+        <div className="attribution-search">
+          <input
+            type="text"
+            value={query}
+            disabled={busy}
+            autoFocus
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder="Search a name, or type a new one…"
+            aria-label="Search for who made this"
+          />
+          {trimmed.length > 0 && (
+            <ul className="attribution-suggestions">
+              {suggestions.map((profile) => (
+                <li key={profile.id}>
+                  <button type="button" disabled={busy} onClick={() => add(profile)}>
+                    {profile.display_name}
+                    {profile.status === 'suggested' && (
+                      <span className="attribution-kind"> · suggested</span>
+                    )}
+                    {profile.type === 'entity' && (
+                      <span className="attribution-kind"> · entity</span>
+                    )}
+                  </button>
+                </li>
+              ))}
+              {!exactMatch && (
+                <li>
+                  <button
+                    type="button"
+                    className="attribution-add-new"
+                    disabled={busy}
+                    onClick={addNew}
+                  >
+                    Suggest “{trimmed}” as a new profile
+                  </button>
+                </li>
+              )}
+            </ul>
+          )}
+        </div>
+      )}
 
       {error && <p className="attribution-error">{error}</p>}
     </section>
   )
+}
+
+/** "CJ Desai" → "CD"; one word gives its first two letters. */
+function initials(name: string): string {
+  const words = name.trim().split(/\s+/)
+  const letters =
+    words.length > 1 ? words[0][0] + words[words.length - 1][0] : words[0].slice(0, 2)
+  return letters.toUpperCase()
 }
