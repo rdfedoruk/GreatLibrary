@@ -111,7 +111,7 @@ Collision edge (e.g. he upvoted his own attributed submission from the member ac
 - `url` — the resolved, canonical URL (see browser-plugin-spec.md for per-site resolution rules)
 - `description` — short, user-provided or auto-suggested (never full scraped content)
 - `source_site` — which handler produced this (linkedin / youtube / sn_community / manual / generic)
-- Tags — many-to-many via a join table against the tag taxonomy (see Tagging Taxonomy below)
+- Tags — many-to-many via a join table (see Tagging below)
 - Attribution — many-to-many via `submission_attributions` (below), not a single FK.
 
 ### submission_attributions
@@ -146,24 +146,25 @@ Two separate mechanisms (revised 2026-07-18) — a single mechanism couldn't cov
 - `status` — pending / approved / rejected, for `open_request`. `verified_self` executes immediately; its row is just an audit record.
 - `reason` — optional for `verified_self`, effectively required for `open_request`.
 
-## Tagging Taxonomy
+## Tagging
 
-**Resolved for v1.** Two flat dimensions, no hierarchy, controlled vocabulary maintained directly by the admin (no governance tooling needed at current scale). Each dimension is its own `tags` table (or a single `tags` table with a `dimension` column) so the two lists don't collide in the same autocomplete. **Do not build free-text tag input** — tags are selected from the controlled list; new tags are a deliberate admin add, not user free-text.
+Replaced 2026-11-16 by the suggest-and-approve model from the ContentTagger proof of concept (migration `20261116000010`).
 
-### Dimension 1: Module / Product Area
-Topic/module tags, including Career/Certification content. Granularity goes as deep as useful — a submission can carry both a broad and a specific tag (e.g. **Flow Designer** + **Flow Action** on a post about building a Flow Action).
+### tags
+- `name` — at most 40 characters, unique whatever the capitals and across every type. The casing someone typed is kept.
+- `status` — `suggested` or `approved`. A tag someone types on an entry starts out suggested.
+- `type` — `general`, `version` or `medium`. A tag has exactly one. General tags share one unlabelled line on an entry; each other type gets its own labelled line. A new type is one more allowed value in the database plus one row in `TAG_TYPES` (`src/features/tags/api.ts`).
 
-Starter set — Core IT: ITSM, ITOM, ITBM/SPM, ITAM, CMDB/Discovery, DevOps. Platform/Dev: App Engine, Flow Designer (+ sub-tags like Flow Action), IntegrationHub, Now Assist/Agentic AI, Virtual Agent, Performance Analytics/Reporting, Platform Administration, Scripting/Server-side, UI Builder/UI Policies/Client Scripts. Business Lines: CSM, HRSD, SecOps, GRC, FSM, Source-to-Pay/Procurement. Cross-cutting: Integrations, Upgrades/Release Management, Instance Architecture/Best Practices, Career/Certification/Industry Commentary.
+### submission_tags
+Which entries carry which tags — one row per pair, no limit per entry.
 
-### Dimension 2: Medium
-Strictly format, three values: **Video, Article, Podcast**. Live streams fold into Video; threads and slide decks fold into Article. Genre distinctions (tutorial vs. opinion vs. case study, etc.) are deliberately dropped, not migrated — that nuance lives in the submission's title/description, not a tag.
+### Rules the database enforces
+- A suggested tag that no entry carries any more is deleted automatically, so taking a typo off its only entry cleans the typo up.
+- Merging (`merge_tag`) moves every entry from one tag to another and deletes the first, in one step.
+- Deleting a tag takes it off every entry.
 
-### Tag count
-No cap per submission — unlimited tags allowed. Discipline lives in the controlled vocabulary, not a per-submission limit. **Parked for later:** if average tag count climbs, the filter/search UI will need explicit AND/OR logic — a UI concern, not a tagging-model concern.
-
-### Deferred
-- **Tag deprecation/renaming** (e.g. ITBM → SPM as ServiceNow renames products) — explicitly deferred, not forgotten. No automated versioning in v1; will be a manual/scripted fix when it's actually needed.
-- **Skill Level** — considered and cut. Rarely useful in practice; not a tag or a field.
+### Who can do what
+Reading is public. **Every signed-in account can do everything else** — tag and untag any entry, and approve, rename, retype, merge and delete tags. This is deliberately wide until a roles layer exists; the policies to narrow are at the bottom of the migration.
 
 ## Auth / Account Model
 

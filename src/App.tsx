@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   BrowserRouter,
   Link,
+  NavLink,
   Route,
   Routes,
   useSearchParams,
@@ -9,12 +10,13 @@ import {
 import './App.css'
 import { signInWithEmail, signInWithGoogle, signOut, useSession } from './lib/auth'
 import {
+  BountiesPage,
   SubmissionList,
   SubmissionPage,
   SubmitForm,
 } from './features/submissions'
 import { ProfilePage } from './features/profiles'
-import { fetchTags, tagSlug, type Tag } from './features/tags'
+import { TagsPage, fetchTags, tagSlug, type Tag } from './features/tags'
 
 function EmailSignIn() {
   const [email, setEmail] = useState('')
@@ -174,6 +176,14 @@ function App() {
         </div>
       </header>
 
+      <nav className="site-nav" aria-label="Main">
+        <NavLink to="/" end>
+          Feed
+        </NavLink>
+        <NavLink to="/bounties">Curation Bounties</NavLink>
+        <NavLink to="/tags">Tags</NavLink>
+      </nav>
+
       <Routes>
         <Route
           path="/"
@@ -189,6 +199,11 @@ function App() {
           path="/submission/:id"
           element={<SubmissionPage currentUserId={session?.user.id ?? null} />}
         />
+        <Route
+          path="/bounties"
+          element={<BountiesPage currentUserId={session?.user.id ?? null} />}
+        />
+        <Route path="/tags" element={<TagsPage signedIn={session !== null} />} />
         <Route
           path="/profile/:slug"
           element={<ProfilePage currentUserId={session?.user.id ?? null} />}

@@ -1,70 +1,122 @@
-.tag-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.tag-picker-status {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.tag-group {
-  border: none;
-  margin: 0;
-  padding: 0;
-}
-
-.tag-group legend {
+/* Tag chips: approved = solid light blue, dark text. Suggested = light blue
+   text and border on black. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 999px;
+  padding: 2px 11px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--muted);
-  padding: 0 0 6px;
+  white-space: nowrap;
+  background: var(--tag);
+  color: var(--tag-ink);
+  border: 1px solid var(--tag);
 }
 
-.tag-options {
+.tag.suggested {
+  background: #000;
+  color: var(--tag-line);
+  border-color: var(--tag-line);
+}
+
+.tag-name {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tag-name:hover {
+  text-decoration: underline;
+}
+
+.shell button.tag-x {
+  all: unset;
+  cursor: pointer;
+  margin: 0 -5px 0 3px;
+  padding: 0 4px;
+  border-radius: 999px;
+  opacity: 0.6;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.shell button.tag-x:hover,
+.shell button.tag-x:focus-visible {
+  opacity: 1;
+}
+
+.shell button.tag-x:focus-visible {
+  outline: 2px solid var(--accent);
+}
+
+.submission-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tag-line {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  align-items: center;
 }
 
-/* A tag you could pick is an outlined chip; one you have picked is solid. */
-.shell button.tag-option {
+.tag-type-label {
+  color: var(--muted);
   font-size: 13px;
-  padding: 2px 11px;
-  border-radius: 999px;
-  color: var(--tag-line);
+  font-weight: 600;
+  margin-right: 2px;
+}
+
+.no-tags {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.shell button.tag-button {
+  padding: 2px 6px;
+  font-size: 15px;
+  line-height: 1.2;
   background: transparent;
-  border: 1px solid var(--tag-line);
+  border: 1px solid transparent;
+  border-radius: 8px;
 }
 
-.shell button.tag-option.selected {
-  color: var(--tag-ink);
-  background: var(--tag);
-  border-color: var(--tag);
+.shell button.tag-button:hover {
+  border-color: var(--line);
+  filter: none;
 }
 
-.tag-selected-row {
-  margin-bottom: 8px;
+.shell button.tag-button[aria-expanded='true'] {
+  border-color: var(--tag-line);
 }
 
-.tag-autocomplete {
+.tag-error {
+  color: var(--danger);
+  font-size: 13px;
+  min-height: 0;
+}
+
+/* Type-ahead */
+.tagger {
   position: relative;
   max-width: 340px;
 }
 
-.tag-autocomplete input {
+.tagger input {
   width: 100%;
   padding: 8px 12px;
   background: var(--bg);
 }
 
-.tag-suggestions {
+.tag-choices {
   position: absolute;
-  top: calc(100% + 4px);
+  z-index: 5;
   left: 0;
   right: 0;
-  z-index: 10;
+  top: calc(100% + 4px);
   margin: 0;
   padding: 4px;
   list-style: none;
@@ -74,21 +126,125 @@
   box-shadow: var(--shadow);
 }
 
-.shell .tag-suggestions button {
-  display: block;
-  width: 100%;
-  text-align: left;
-  font-size: 13px;
-  font-weight: 400;
+.tag-choices li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 6px 8px;
-  color: var(--muted);
-  background: transparent;
-  border: none;
   border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
 }
 
-.shell .tag-suggestions button:hover {
+.tag-choices li[aria-selected='true'] {
   background: var(--surface);
   color: var(--text);
-  filter: none;
+}
+
+.tag-choices li.note {
+  cursor: default;
+}
+
+/* Tags page */
+.tags-page h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 28px 0 10px;
+}
+
+.tags-status {
+  color: var(--muted);
+  padding: 40px 0;
+  text-align: center;
+}
+
+.tag-create {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0 8px;
+}
+
+.tag-create input {
+  flex: 1;
+  min-width: 0;
+}
+
+.tags-page .tag-error {
+  min-height: 22px;
+}
+
+.tag-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.tag-row-preview {
+  width: 190px;
+  flex: none;
+  overflow: hidden;
+}
+
+.tag-row-preview .tag {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+
+.tag-row-rename {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.tag-row input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg);
+}
+
+.tag-row select {
+  flex: none;
+  padding: 8px 10px;
+  background: var(--bg);
+}
+
+.tag-row-uses {
+  color: var(--muted);
+  font-size: 13px;
+  width: 64px;
+  flex: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.shell .tag-row button {
+  padding: 7px 12px;
+  flex: none;
+}
+
+.shell .tag-row button.tag-row-delete {
+  padding: 5px 8px;
+  border-color: transparent;
+}
+
+.shell .tag-row button.tag-row-delete:hover {
+  border-color: var(--line);
+}
+
+@media (max-width: 620px) {
+  .tag-row {
+    flex-wrap: wrap;
+  }
+  .tag-row-preview {
+    width: 100%;
+  }
 }

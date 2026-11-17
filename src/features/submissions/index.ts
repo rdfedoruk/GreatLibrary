@@ -3,6 +3,7 @@
 export { SubmissionList } from './SubmissionList'
 export { SubmissionPage } from './SubmissionPage'
 export { SubmitForm } from './SubmitForm'
+export { BountiesPage } from './BountiesPage'
 export { fetchSubmissions, fetchSubmission, createSubmission } from './api'
 export type {
   SubmissionListItem,

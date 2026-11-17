@@ -23,17 +23,25 @@ The only place work is tracked. Finished lines get deleted, not ticked.
 
 ## Building now, in order
 
-1. **Thumbnails and titles.** On submit, work out the title and thumbnail
+1. **Tagging — built, not yet live.** Works against the test database.
+   Going live means applying the database change to production first,
+   then merging the code. That step deletes the 25 unused Module tags and
+   opens tag management to every signed-in account.
+2. **Thumbnails and titles.** On submit, work out the title and thumbnail
    with the r6 rules, and show the thumbnail on the left of each entry.
    Adds one small server-side piece and image storage.
-2. **Tagging.** Suggest / approve / rename / merge, tag types (General,
-   Version, Medium), the admin tags page, and the Curation Bounties page.
-   Module stops being a type: Flow Designer merges into the general tag of
-   the same name, the 25 unused Module tags are deleted.
 3. **Bring ContentTagger's 191 entries across**, with thumbnails and tags,
    submitted by Andrew's account, authors left blank.
 
+## Left out of tagging on purpose
+
+- ContentTagger's search box and filtering by several tags at once. The
+  feed still filters by one tag, by clicking its chip.
+- Picking tags while submitting. Tags are added afterwards, on the entry.
+
 ## Loose ends
+
+- `docs/data-model.md` still describes claiming as a working plan.
 
 - The claims pages are gone from the site, but the claims tables are still
   in the live database. Remove them when the database is reworked for

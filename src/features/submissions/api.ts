@@ -1,15 +1,10 @@
 import { supabase } from '../../lib/supabase'
 import type { Database } from '../../lib/database.types'
 import type { VoteValue } from '../votes'
+import type { Tag } from '../tags'
 
 export type SourceSite = Database['public']['Enums']['source_site']
-export type TagDimension = Database['public']['Enums']['tag_dimension']
-
-export interface SubmissionTag {
-  id: string
-  dimension: TagDimension
-  name: string
-}
+export type SubmissionTag = Tag
 
 export interface ProfileRef {
   id: string
@@ -41,46 +36,26 @@ export interface SubmissionFilter {
 export interface NewSubmission {
   url: string
   description: string
-  tagIds: string[]
 }
 
-// Two inserts, not a transaction: if tagging fails the submission still
-// lands untagged. Acceptable at current scale — an RPC can make it atomic
-// if orphaned-tag reports ever show up.
+// Tags are not part of submitting: they are suggested afterwards, on the
+// entry itself, by anyone.
 export async function createSubmission(
   input: NewSubmission,
   userId: string,
 ): Promise<void> {
-  const { data: submission, error } = await supabase
-    .from('submissions')
-    .insert({
-      url: input.url,
-      description: input.description,
-      source_site: 'manual',
-      submitted_by: userId,
-    })
-    .select('id')
-    .single()
+  const { error } = await supabase.from('submissions').insert({
+    url: input.url,
+    description: input.description,
+    source_site: 'manual',
+    submitted_by: userId,
+  })
 
   if (error) {
     if (error.code === '23505') {
       throw new Error('That URL is already in the library.')
     }
     throw new Error(error.message)
-  }
-
-  if (input.tagIds.length > 0) {
-    const { error: tagError } = await supabase.from('submission_tags').insert(
-      input.tagIds.map((tagId) => ({
-        submission_id: submission.id,
-        tag_id: tagId,
-      })),
-    )
-    if (tagError) {
-      throw new Error(
-        `Submitted, but tagging failed: ${tagError.message}`,
-      )
-    }
   }
 }
 
@@ -119,7 +94,7 @@ export async function removeAttribution(
 const SELECT = `id, url, description, source_site, created_at,
    submitter:profiles!submissions_submitted_by_fkey ( id, display_name, slug ),
    submission_attributions ( profiles ( id, display_name, slug ) ),
-   submission_tags ( tags ( id, dimension, name ) ),
+   submission_tags ( tags ( id, name, status, type ) ),
    votes ( user_id, value ),
    comments ( count )`
 
@@ -133,7 +108,9 @@ type SubmissionRow = {
   submission_attributions: {
     profiles: { id: string; display_name: string; slug: string } | null
   }[]
-  submission_tags: { tags: SubmissionTag | null }[]
+  submission_tags: {
+    tags: { id: string; name: string; status: string; type: string } | null
+  }[]
   votes: { user_id: string; value: number }[]
   comments: { count: number }[]
 }
@@ -167,7 +144,9 @@ function toItem(
           ]
         : [],
     ),
-    tags: row.submission_tags.flatMap((st) => st.tags ?? []),
+    tags: row.submission_tags.flatMap((st) =>
+      st.tags ? [{ ...st.tags, status: st.tags.status as Tag['status'] }] : [],
+    ),
     score: row.votes.reduce((sum, v) => sum + v.value, 0),
     userVote: (own?.value as VoteValue | undefined) ?? null,
     // Only the count comes back with the list; the comments themselves

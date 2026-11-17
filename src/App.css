@@ -38,6 +38,32 @@
   margin-top: 2px;
 }
 
+.site-nav {
+  display: flex;
+  gap: 6px;
+  margin: -8px 0 20px;
+}
+
+.site-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.site-nav a:hover {
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.site-nav a[aria-current] {
+  color: var(--text);
+  border-color: var(--line);
+  background: var(--surface);
+}
+
 /* Says which tag the feed is narrowed to, and offers the only way back out. */
 .feed-filter {
   display: flex;

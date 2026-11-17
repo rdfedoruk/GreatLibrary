@@ -373,19 +373,25 @@ export type Database = {
       }
       tags: {
         Row: {
-          dimension: Database["public"]["Enums"]["tag_dimension"]
+          created_at: string
           id: string
           name: string
+          status: string
+          type: string
         }
         Insert: {
-          dimension: Database["public"]["Enums"]["tag_dimension"]
+          created_at?: string
           id?: string
           name: string
+          status?: string
+          type?: string
         }
         Update: {
-          dimension?: Database["public"]["Enums"]["tag_dimension"]
+          created_at?: string
           id?: string
           name?: string
+          status?: string
+          type?: string
         }
         Relationships: []
       }
@@ -430,6 +436,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      merge_tag: {
+        Args: { p_from: string; p_into: string }
+        Returns: undefined
+      }
       create_unclaimed_profile: {
         Args: { p_display_name: string }
         Returns: {
@@ -462,7 +472,6 @@ export type Database = {
         | "sn_community"
         | "manual"
         | "generic"
-      tag_dimension: "module" | "medium"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -598,7 +607,6 @@ export const Constants = {
       removal_path: ["verified_self", "open_request"],
       review_status: ["pending", "approved", "rejected"],
       source_site: ["linkedin", "youtube", "sn_community", "manual", "generic"],
-      tag_dimension: ["module", "medium"],
     },
   },
 } as const
