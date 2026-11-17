@@ -80,7 +80,15 @@ export function SubmissionCard({
               {item.creators.map((c, i) => (
                 <span key={c.slug}>
                   {i > 0 && ', '}
-                  <Link className="profile-link" to={`/profile/${c.slug}`}>
+                  <Link
+                    className={`profile-link ${c.status}`}
+                    to={`/profile/${c.slug}`}
+                    title={
+                      c.status === 'suggested'
+                        ? 'Suggested: awaiting approval'
+                        : undefined
+                    }
+                  >
                     {c.name}
                   </Link>
                 </span>

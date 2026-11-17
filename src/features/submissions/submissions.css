@@ -182,7 +182,25 @@
   font-weight: 600;
   padding: 2px 10px;
   border-radius: 999px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--profile);
+  background: var(--profile);
+  color: var(--profile-ink);
+}
+
+/* A suggested profile: text and border only, as with suggested tags. */
+.attribution-chip.suggested {
+  background: transparent;
+  color: var(--profile);
+}
+
+.attribution-chip .profile-link,
+.attribution-chip .profile-link:hover {
+  color: inherit;
+}
+
+/* On the card's by-line, a suggested name is quieter until approved. */
+.submission-creators .profile-link.suggested {
+  font-style: italic;
 }
 
 .shell button.attribution-remove {

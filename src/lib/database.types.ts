@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.15"
   }
   graphql_public: {
     Tables: {
@@ -195,6 +195,7 @@ export type Database = {
           linked_user_id: string | null
           merged_into: string | null
           slug: string
+          status: string
           type: Database["public"]["Enums"]["profile_type"]
         }
         Insert: {
@@ -204,6 +205,7 @@ export type Database = {
           linked_user_id?: string | null
           merged_into?: string | null
           slug: string
+          status?: string
           type?: Database["public"]["Enums"]["profile_type"]
         }
         Update: {
@@ -213,6 +215,7 @@ export type Database = {
           linked_user_id?: string | null
           merged_into?: string | null
           slug?: string
+          status?: string
           type?: Database["public"]["Enums"]["profile_type"]
         }
         Relationships: [
@@ -451,10 +454,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      merge_tag: {
-        Args: { p_from: string; p_into: string }
-        Returns: undefined
-      }
+      approve_profile: { Args: { p_id: string }; Returns: undefined }
       create_unclaimed_profile: {
         Args: { p_display_name: string }
         Returns: {
@@ -464,6 +464,7 @@ export type Database = {
           linked_user_id: string | null
           merged_into: string | null
           slug: string
+          status: string
           type: Database["public"]["Enums"]["profile_type"]
         }
         SetofOptions: {
@@ -473,7 +474,20 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      delete_suggested_profile: { Args: { p_id: string }; Returns: undefined }
       generate_profile_slug: { Args: { name: string }; Returns: string }
+      merge_profile: {
+        Args: { p_from: string; p_into: string }
+        Returns: undefined
+      }
+      merge_tag: {
+        Args: { p_from: string; p_into: string }
+        Returns: undefined
+      }
+      rename_suggested_profile: {
+        Args: { p_display_name: string; p_id: string }
+        Returns: undefined
+      }
       slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
@@ -502,12 +516,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -531,11 +545,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -556,11 +570,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -581,11 +595,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -598,11 +612,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

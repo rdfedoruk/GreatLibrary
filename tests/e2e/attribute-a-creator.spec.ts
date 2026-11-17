@@ -25,7 +25,7 @@ test.describe('crediting the creator of a submission', () => {
 
     // Nobody has a page under this name, so the only way forward is to make one.
     await editor.getByLabel('Search for who made this').fill(creatorName)
-    await editor.getByRole('button', { name: /Add .* as a new page/ }).click()
+    await editor.getByRole('button', { name: /Suggest .* as a new profile/ }).click()
     await expect(editor.getByRole('link', { name: creatorName })).toBeVisible()
     await trackProfileNamed(creatorName)
 
@@ -59,7 +59,7 @@ test.describe('crediting the creator of a submission', () => {
     const search = editor.getByLabel('Search for who made this')
 
     await search.fill(creatorName)
-    await editor.getByRole('button', { name: /Add .* as a new page/ }).click()
+    await editor.getByRole('button', { name: /Suggest .* as a new profile/ }).click()
     await expect(editor.getByRole('link', { name: creatorName })).toBeVisible()
     await trackProfileNamed(creatorName)
 
@@ -67,7 +67,7 @@ test.describe('crediting the creator of a submission', () => {
     // offer to make a second one — the commonest way duplicates get created.
     await search.fill(creatorName)
     await expect(
-      editor.getByRole('button', { name: /Add .* as a new page/ }),
+      editor.getByRole('button', { name: /Suggest .* as a new profile/ }),
     ).toHaveCount(0)
 
     // Already credited, so it isn't offered as a suggestion either.

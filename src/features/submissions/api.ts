@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabase'
 import type { Database } from '../../lib/database.types'
 import type { VoteValue } from '../votes'
 import type { Tag } from '../tags'
+import type { ProfileStatus } from '../profiles'
 
 export type SourceSite = Database['public']['Enums']['source_site']
 export type SubmissionTag = Tag
@@ -10,6 +11,8 @@ export interface ProfileRef {
   id: string
   name: string
   slug: string
+  /** Credited profiles can be suggested (a typed-in name not yet approved). */
+  status: ProfileStatus
 }
 
 export interface SubmissionListItem {
@@ -107,7 +110,7 @@ export async function removeAttribution(
 
 const SELECT = `id, url, title, description, thumbnail_path, source_site, created_at,
    submitter:profiles!submissions_submitted_by_fkey ( id, display_name, slug ),
-   submission_attributions ( profiles ( id, display_name, slug ) ),
+   submission_attributions ( profiles ( id, display_name, slug, status ) ),
    submission_tags ( tags ( id, name, status, type ) ),
    votes ( user_id, value ),
    comments ( count )`
@@ -122,7 +125,12 @@ type SubmissionRow = {
   created_at: string
   submitter: { id: string; display_name: string; slug: string }
   submission_attributions: {
-    profiles: { id: string; display_name: string; slug: string } | null
+    profiles: {
+      id: string
+      display_name: string
+      slug: string
+      status: string
+    } | null
   }[]
   submission_tags: {
     tags: { id: string; name: string; status: string; type: string } | null
@@ -155,6 +163,7 @@ function toItem(
       id: row.submitter.id,
       name: row.submitter.display_name,
       slug: row.submitter.slug,
+      status: 'approved',
     },
     creators: row.submission_attributions.flatMap((a) =>
       a.profiles
@@ -163,6 +172,7 @@ function toItem(
               id: a.profiles.id,
               name: a.profiles.display_name,
               slug: a.profiles.slug,
+              status: a.profiles.status as ProfileStatus,
             },
           ]
         : [],

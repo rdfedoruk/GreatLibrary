@@ -58,6 +58,13 @@ export function ProfilePage({
           <span className="profile-type-chip">Entity</span>
         )}
       </header>
+      {profile.status === 'suggested' && (
+        <p className="profile-pending">
+          Awaiting approval. Someone typed this name in while crediting an
+          entry; it becomes a real profile once it is approved in{' '}
+          <Link to="/bounties#profiles">Curation Bounties</Link>.
+        </p>
+      )}
 
       <section className="profile-section">
         <h3>Content by {profile.display_name}</h3>
