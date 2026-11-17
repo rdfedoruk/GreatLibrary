@@ -1,26 +1,41 @@
 .shell {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
 }
 
 .masthead {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 8px 24px 24px;
-  border-bottom: 1px solid var(--border);
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .masthead h1 {
-  margin-bottom: 4px;
+  font-size: 26px;
+}
+
+/* The amber bar over the title — the same mark the generated thumbnails carry. */
+.masthead h1::before {
+  content: '';
+  display: block;
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--accent);
+  margin-bottom: 14px;
+}
+
+.masthead-home {
+  color: inherit;
+  text-decoration: none;
 }
 
 .tagline {
-  color: var(--text, inherit);
-  opacity: 0.75;
+  color: var(--muted);
+  margin-top: 2px;
 }
 
 /* Says which tag the feed is narrowed to, and offers the only way back out. */
@@ -33,28 +48,36 @@
   margin: 0 0 16px;
 }
 
-.feed-filter h2 {
-  margin: 0;
-  font-size: 20px;
-}
-
 .feed-filter a {
-  font-size: 14px;
+  font-size: 13px;
 }
 
+/* Buttons are amber by default; `quiet` is the outlined one for the action
+   that isn't the main one. */
 .shell button {
-  font-size: 16px;
-  padding: 8px 16px;
-  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
-  color: var(--accent, inherit);
-  background: var(--accent-bg, transparent);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
+  color: var(--accent-ink);
+  background: var(--accent);
 }
 
-.shell button:hover {
-  border-color: var(--accent-border, currentColor);
+.shell button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.shell button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.shell button.quiet {
+  color: var(--text);
+  background: transparent;
+  border-color: var(--line);
 }
 
 .account {
@@ -64,7 +87,8 @@
 }
 
 .account-name {
-  font-size: 15px;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .signin-options {
@@ -75,8 +99,8 @@
 }
 
 .signin-divider {
-  opacity: 0.6;
-  font-size: 14px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .email-signin {
@@ -85,28 +109,7 @@
   gap: 8px;
 }
 
-.email-signin input {
-  font-size: 15px;
-  padding: 7px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: inherit;
-}
-
 .email-error {
   font-size: 13px;
-  color: #d33;
-}
-
-.masthead-home {
-  color: inherit;
-  text-decoration: none;
-}
-
-.claim-nav-link {
-  color: inherit;
-  font-size: 0.9rem;
-  text-decoration: underline;
-  text-decoration-color: rgba(128, 120, 100, 0.4);
+  color: var(--danger);
 }

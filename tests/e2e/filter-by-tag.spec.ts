@@ -72,6 +72,9 @@ test.describe('filtering the library by tag', () => {
     await page.goto('/')
     await cardFor(page, tagged).getByRole('link', { name: /^Discuss/ }).click()
     await expect(page).toHaveURL(/\/submission\/[0-9a-f-]+$/)
+    // The address changes a beat before the feed is swapped for the entry's
+    // page; wait for the page itself or the feed's chips are still there.
+    await expect(page.getByRole('link', { name: /Back to the library/ })).toBeVisible()
 
     await page.getByRole('link', { name: 'Video', exact: true }).click()
 

@@ -53,9 +53,7 @@ export interface ProfileSearchResult {
 }
 
 // Type-ahead over every public identity — person or entity, claimed or not,
-// since content can be made by any of them. Deliberately wider than
-// searchUnclaimedProfiles in the claims feature, which is narrow because you
-// can only claim an unclaimed person page. Retired duplicates are hidden so a
+// since content can be made by any of them. Retired duplicates are hidden so a
 // merged page can't be picked.
 export async function searchProfiles(
   query: string,

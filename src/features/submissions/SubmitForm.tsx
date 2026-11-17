@@ -95,7 +95,7 @@ export function SubmitForm({ userId, onSubmitted }: SubmitFormProps) {
         <button type="submit" disabled={busy}>
           {busy ? 'Submitting…' : 'Submit'}
         </button>
-        <button type="button" disabled={busy} onClick={() => setOpen(false)}>
+        <button type="button" className="quiet" disabled={busy} onClick={() => setOpen(false)}>
           Cancel
         </button>
       </div>
