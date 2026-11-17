@@ -270,17 +270,7 @@
   border-radius: 12px;
 }
 
-.curation-card-head {
-  padding: 16px 18px;
-  border-bottom: 1px solid var(--line);
-}
-
-.curation-card-head h2 {
-  margin: 0;
-  font-size: 18px;
-}
-
-/* Each block inside the curation card: Topics, Medium, Versions, credits. */
+/* Each block inside the curation card: credits, topics, medium, versions. */
 .tag-section,
 .curation-section {
   display: flex;
@@ -290,7 +280,8 @@
   border-bottom: 1px solid var(--line);
 }
 
-.curation-section:last-child {
+.curation-section:last-child,
+.curation-card > .tag-section-row:last-child .tag-section {
   border-bottom: none;
 }
 
@@ -315,12 +306,6 @@
   font-size: 15px;
 }
 
-.curation-hint {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: var(--muted);
-}
-
 .shell button.curation-icon-button {
   display: inline-flex;
   align-items: center;
@@ -343,11 +328,6 @@
 
 .shell button.curation-icon-button[aria-expanded='true'] {
   border-color: var(--tag-line);
-}
-
-.shell button.curation-small-button {
-  padding: 6px 12px;
-  font-size: 13px;
 }
 
 @media (max-width: 620px) {
@@ -584,4 +564,22 @@
   font-weight: 700;
   color: var(--text);
   background: var(--bg);
+}
+
+/* A bounty worked on this visit: kept on the list, faded, until you leave. */
+.submission-card.bounty-done {
+  opacity: 0.6;
+}
+
+.submission-card.bounty-done:hover,
+.submission-card.bounty-done:focus-within {
+  opacity: 1;
+}
+
+.bounty-done-label {
+  display: inline-block;
+  margin-bottom: 4px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
 }

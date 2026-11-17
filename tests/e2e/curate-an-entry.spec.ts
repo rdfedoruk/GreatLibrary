@@ -40,7 +40,7 @@ test.describe('curating an entry', () => {
 
     const credits = page.getByRole('region', { name: 'People and organizations' })
     await expect(credits).toContainText('Nobody credited yet')
-    await credits.getByRole('button', { name: 'Add attribution' }).click()
+    await credits.getByRole('button', { name: 'Edit people and organizations' }).click()
     await credits.getByLabel('Search for who made this').fill(creatorName)
     await credits.getByRole('button', { name: /Suggest .* as a new profile/ }).click()
     await expect(credits.getByRole('link', { name: creatorName })).toBeVisible()
@@ -79,7 +79,7 @@ test.describe('curating an entry', () => {
     const versions = page.getByRole('region', { name: 'Applicable versions' })
     await expect(versions).toContainText('Not yet identified')
 
-    await versions.getByRole('button', { name: 'Add Applicable versions' }).click()
+    await versions.getByRole('button', { name: 'Edit Applicable versions' }).click()
     await versions.getByLabel('Add applicable versions').fill(version)
     // Only "version" is offered as the kind of new tag, not topic or medium.
     const suggest = page.getByRole('option').filter({ hasText: /^Suggest new/ })
@@ -90,7 +90,7 @@ test.describe('curating an entry', () => {
     await expect(versions.getByRole('link', { name: version })).toBeVisible()
     // It went in as a version, so it isn't listed under Topics.
     await expect(
-      page.getByRole('region', { name: 'Topics' }).getByRole('link', { name: version }),
+      page.getByRole('region', { name: 'What is this content about?' }).getByRole('link', { name: version }),
     ).toHaveCount(0)
 
     // Tidy up: taking it off removes the now-unused suggestion too.
@@ -104,8 +104,8 @@ test.describe('curating an entry', () => {
 
     await signOut(page)
     await page.goto(`/submission/${submissionId}/curate`)
-    await expect(page.getByRole('region', { name: 'Topics' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'What is this content about?' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Edit title' })).toHaveCount(0)
-    await expect(page.getByRole('button', { name: /^Add / })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /^Edit / })).toHaveCount(0)
   })
 })

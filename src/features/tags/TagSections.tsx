@@ -16,22 +16,10 @@ import './tags.css'
  * What each section on an entry's page is called. A tag type not listed
  * here still gets a section, headed by its label from TAG_TYPES.
  */
-const SECTIONS: Record<string, { heading: string; hint: string; empty: string }> = {
-  general: {
-    heading: 'Topics',
-    hint: 'What this content is about',
-    empty: 'No topics yet',
-  },
-  medium: {
-    heading: 'Medium',
-    hint: 'How it is consumed',
-    empty: 'Not yet identified',
-  },
-  version: {
-    heading: 'Applicable versions',
-    hint: 'Which ServiceNow releases it applies to',
-    empty: 'Not yet identified',
-  },
+const SECTIONS: Record<string, { heading: string; empty: string }> = {
+  general: { heading: 'What is this content about?', empty: 'No topics yet' },
+  medium: { heading: 'Medium', empty: 'Not yet identified' },
+  version: { heading: 'Applicable versions', empty: 'Not yet identified' },
 }
 
 /**
@@ -76,7 +64,6 @@ export function TagSections({
   const section = (typeId: string) => {
     const words = SECTIONS[typeId] ?? {
       heading: tagTypeLabel(typeId),
-      hint: '',
       empty: 'None yet',
     }
     const mine = tags
@@ -95,20 +82,21 @@ export function TagSections({
         aria-label={words.heading}
       >
         <div className="curation-head">
-          <div>
-            <h3>{words.heading}</h3>
-            {words.hint && <p className="curation-hint">{words.hint}</p>}
-          </div>
+          <h3>{words.heading}</h3>
           {canEdit && (
             <button
               type="button"
               className="curation-icon-button"
-              aria-label={editing ? `Done with ${words.heading}` : `Add ${words.heading}`}
+              aria-label={editing ? `Done with ${words.heading}` : `Edit ${words.heading}`}
               aria-expanded={editing}
-              title={editing ? 'Done' : `Add ${words.heading.toLowerCase()}`}
+              title={editing ? 'Done' : 'Edit'}
               onClick={() => setOpen(editing ? null : typeId)}
             >
-              {editing ? '✓' : '+'}
+              {editing ? '✓' : (
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="action-icon">
+                <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              </svg>
+              )}
             </button>
           )}
         </div>
@@ -156,7 +144,7 @@ export function TagSections({
         </div>
         {editing && (
           <Tagger
-            label={`Add ${words.heading.toLowerCase()}`}
+            label={typeId === 'general' ? 'Add a topic' : `Add ${words.heading.toLowerCase()}`}
             carried={tags}
             onlyType={typeId}
             onAdd={add}
