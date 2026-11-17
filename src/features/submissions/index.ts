@@ -2,6 +2,7 @@
 // shell import from here only — never from files inside this folder.
 export { SubmissionList } from './SubmissionList'
 export { SubmissionPage } from './SubmissionPage'
+export { CurationPage } from './CurationPage'
 export { SubmitForm } from './SubmitForm'
 export { BountiesPage } from './BountiesPage'
 export { fetchSubmissions, fetchSubmission, createSubmission } from './api'

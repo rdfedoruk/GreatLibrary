@@ -111,6 +111,13 @@ export function SubmissionCard({
                   {item.commentCount}
                 </Link>
               )}
+              <Link
+                className="submission-discuss"
+                to={`/submission/${item.id}/curate`}
+                title="Curate: tags, title, credits"
+              >
+                Curate
+              </Link>
             </>
           }
         />

@@ -13,6 +13,7 @@ import {
   BountiesPage,
   SubmissionList,
   SubmissionPage,
+  CurationPage,
   SubmitForm,
 } from './features/submissions'
 import { ProfilePage } from './features/profiles'
@@ -198,6 +199,10 @@ function App() {
         <Route
           path="/submission/:id"
           element={<SubmissionPage currentUserId={session?.user.id ?? null} />}
+        />
+        <Route
+          path="/submission/:id/curate"
+          element={<CurationPage currentUserId={session?.user.id ?? null} />}
         />
         <Route
           path="/bounties"
