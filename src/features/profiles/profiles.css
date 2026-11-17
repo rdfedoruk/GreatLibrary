@@ -165,3 +165,68 @@ a.profile-chip:hover {
   padding: 6px 10px;
   background: var(--bg);
 }
+
+/* Choosing profiles while submitting */
+.profile-picker-chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.shell button.profile-chip-x {
+  font-size: 15px;
+  line-height: 1;
+  padding: 0 2px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.shell button.profile-chip-x:hover {
+  opacity: 1;
+  filter: none;
+}
+
+.profile-picker-search {
+  position: relative;
+}
+
+.profile-picker-search input {
+  width: 100%;
+}
+
+.profile-picker-choices {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.profile-picker-choices li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.profile-picker-choices li[aria-selected='true'] {
+  background: var(--surface);
+  color: var(--text);
+}

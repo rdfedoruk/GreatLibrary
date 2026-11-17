@@ -23,8 +23,7 @@ The only place work is tracked. Finished lines get deleted, not ticked.
 
 ## Building now, in order
 
-1. **New submit form:** Link, Attributions (search profiles, or type a new
-   name), Tags. The description box goes; the title comes from the link.
+Nothing queued.
 
 ## Left out on purpose
 

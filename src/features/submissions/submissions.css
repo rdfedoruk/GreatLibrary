@@ -27,6 +27,20 @@
   font-weight: 400;
 }
 
+.submit-field-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.submit-field input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg);
+}
+
 .submit-error {
   font-size: 14px;
   color: var(--danger);

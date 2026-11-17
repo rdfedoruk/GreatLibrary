@@ -19,21 +19,27 @@ import './tags.css'
 
 type Choice = { key: string; name: string; type?: string; tag?: Tag }
 
-/** The type-ahead for one entry: pick an existing tag, or suggest a new one. */
-function Tagger({
+/** The type-ahead: pick an existing tag, or suggest a new one. */
+export function Tagger({
   label,
   carried,
   onAdd,
   onClose,
+  autoFocus = true,
 }: {
   label: string
   carried: Tag[]
-  onAdd: (name: string, type?: string) => void
+  /** `tag` is the existing tag picked, if it was one rather than a new name. */
+  onAdd: (name: string, type?: string, tag?: Tag) => void
   onClose: () => void
+  autoFocus?: boolean
 }) {
   const [allTags, setAllTags] = useState<Tag[]>([])
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
+  // The list shows only while the box has focus, so it doesn't sit over
+  // whatever is below it (in the submit form, the Submit button).
+  const [focused, setFocused] = useState(autoFocus)
   const input = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -43,28 +49,31 @@ function Tagger({
         if (!cancelled) setAllTags(tags)
       })
       .catch(() => {})
-    input.current?.focus()
+    if (autoFocus) input.current?.focus()
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [autoFocus])
 
   const typed = query.replace(/\s+/g, ' ').trim()
   const q = typed.toLowerCase()
   const mine = new Set(carried.map((t) => t.id))
+  const carriedNames = new Set(carried.map((t) => t.name.toLowerCase()))
   const starts = (t: Tag) => (t.name.toLowerCase().startsWith(q) ? 0 : 1)
   const matches = allTags
     .filter((t) => !mine.has(t.id) && t.name.toLowerCase().includes(q))
     .sort((a, b) => starts(a) - starts(b) || a.name.localeCompare(b.name))
     .slice(0, 8)
   const exact = allTags.find((t) => t.name.toLowerCase() === q)
+  // A new name already picked but not yet saved isn't in allTags.
+  const pickedNew = carriedNames.has(q) && !exact
 
   const choices: Choice[] = matches.map((t) => ({
     key: t.id,
     name: t.name,
     tag: t,
   }))
-  if (q && !exact) {
+  if (q && !exact && !pickedNew) {
     // One "suggest" choice per type: a plain tag first, then e.g. a version.
     for (const type of TAG_TYPES) {
       choices.push({ key: `new-${type.id}`, name: typed, type: type.id })
@@ -73,7 +82,7 @@ function Tagger({
   const current = Math.min(active, Math.max(choices.length - 1, 0))
 
   const pick = (choice: Choice) => {
-    onAdd(choice.name, choice.type)
+    onAdd(choice.name, choice.type ?? choice.tag?.type, choice.tag)
     setQuery('')
     setActive(0)
   }
@@ -108,8 +117,12 @@ function Tagger({
           setActive(0)
         }}
         onKeyDown={onKeyDown}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       />
-      {(choices.length > 0 || (exact && mine.has(exact.id))) && (
+      {/* On an entry an empty box lists every tag to browse; in the submit
+          form (no autofocus) the list waits for typing. */}
+      {focused && (q || autoFocus) && (choices.length > 0 || (exact && mine.has(exact.id))) && (
         <ul className="tag-choices" role="listbox">
           {choices.map((choice, i) => (
             <li
