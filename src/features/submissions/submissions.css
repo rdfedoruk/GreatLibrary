@@ -50,15 +50,16 @@
 
 .submission-card {
   display: flex;
-  gap: 16px;
+  gap: 18px;
   padding: 14px;
   margin-bottom: 14px;
   background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 12px;
 }
 
 .submission-thumb {
-  width: 240px;
+  width: 200px;
   aspect-ratio: 16 / 9;
   object-fit: cover;
   border-radius: 8px;
@@ -70,6 +71,9 @@
 }
 
 .submission-description {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
   overflow-wrap: anywhere;
 }
 
@@ -94,25 +98,39 @@
 }
 
 .submission-meta {
+  margin: 0;
   font-size: 13px;
   color: var(--muted);
   overflow-wrap: anywhere;
 }
 
-.submission-discuss {
-  align-self: flex-start;
-  margin-top: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
+.submission-creators {
   color: var(--text);
+  font-weight: 600;
+}
+
+.submission-creators .profile-link {
+  text-decoration: none;
+}
+
+.submission-creators .profile-link:hover {
+  text-decoration: underline;
+}
+
+.submission-discuss {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  font-size: 13px;
+  border-radius: 8px;
+  color: var(--muted);
   text-decoration: none;
 }
 
 .submission-discuss:hover {
-  border-color: var(--accent);
+  color: var(--text);
+  background: var(--bg);
 }
 
 .submission-back {
@@ -256,11 +274,9 @@
     gap: 10px;
     flex-wrap: wrap;
   }
-  /* The picture takes the row beside the votes; the text drops below it. */
+  /* The picture takes the full width; the text drops below it. */
   .submission-thumb {
-    width: auto;
-    flex: 1;
-    min-width: 0;
+    width: 100%;
   }
   .submission-body {
     flex-basis: 100%;

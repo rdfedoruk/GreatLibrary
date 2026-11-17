@@ -52,10 +52,12 @@ export function VoteControl({
         title={signedOut ? 'Sign in to vote' : 'Upvote'}
         onClick={() => apply(1)}
       >
-        ▲
+        <svg viewBox="0 0 24 24" aria-hidden="true" className="action-icon">
+          <path d="M12 19V5M5 12l7-7 7 7" />
+        </svg>
       </button>
       <span className="vote-score" title="Net votes">
-        {score > 0 ? `+${score}` : score}
+        {score}
       </span>
       <button
         type="button"
@@ -66,7 +68,9 @@ export function VoteControl({
         title={signedOut ? 'Sign in to vote' : 'Downvote'}
         onClick={() => apply(-1)}
       >
-        ▼
+        <svg viewBox="0 0 24 24" aria-hidden="true" className="action-icon">
+          <path d="M12 5v14M19 12l-7 7-7-7" />
+        </svg>
       </button>
     </div>
   )

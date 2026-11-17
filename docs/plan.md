@@ -7,7 +7,7 @@ The only place work is tracked. Finished lines get deleted, not ticked.
 - **Tagging is replaced** by ContentTagger's: anyone signed in can suggest
   a tag; an admin approves, renames, merges or deletes; tags have a type.
 - **Tag types are kept.** General and Version come from ContentTagger;
-  Medium (Video, Article, Podcast) stays from the live site.
+  Medium (Video, Article, Podcast, Repo) stays from the live site.
 - **Thumbnails use the Thumbnailer rules, version r6.** Only the rules —
   not the Thumbnailer's version history of each result.
 - **Claims are stripped out.** Dealt with later.
@@ -23,15 +23,10 @@ The only place work is tracked. Finished lines get deleted, not ticked.
 
 ## Building now, in order
 
-1. **Thumbnails and titles — built, not yet live.** Works against the test
-   database. Going live: apply the database change to production (it only
-   adds things, so the live site is unaffected), then merge the code, then
-   check `/api/thumbnail` answers on the live site.
-2. **Bring ContentTagger's 191 entries across**, with thumbnails and tags,
-   submitted by Andrew's account, authors left blank. Also give the 8
-   entries already on the live site a title and thumbnail. Both need a way
-   to write images to the live site's storage from this machine, which
-   needs `npx supabase login` first.
+1. **Feed card redesign — built, not yet live** (branch `feed-card-redesign`).
+   Media as icons, Repo added as a medium, two tags then "+N", no
+   submitter on the card. Going live: add Repo to the live database, then
+   merge.
 
 ## Left out of tagging on purpose
 
@@ -46,5 +41,5 @@ The only place work is tracked. Finished lines get deleted, not ticked.
 - The claims pages are gone from the site, but the claims tables are still
   in the live database. Remove them when the database is reworked for
   tagging.
-- The test database keeps every row the tests ever made (345 entries so
-  far). Clear it out and make the tests tidy up after themselves.
+- The test database keeps every row the tests ever made (302 entries so
+  far, 190 of them from a rehearsal of the ContentTagger import). Clear it out and make the tests tidy up after themselves.
