@@ -15,6 +15,7 @@ import {
   untagSubmission,
   type Tag,
 } from './api'
+import { MEDIUM_ICONS } from './mediumIcons'
 import './tags.css'
 
 type Choice = { key: string; name: string; type?: string; tag?: Tag }
@@ -26,6 +27,7 @@ export function Tagger({
   onAdd,
   onClose,
   autoFocus = true,
+  onlyType,
 }: {
   label: string
   carried: Tag[]
@@ -33,6 +35,8 @@ export function Tagger({
   onAdd: (name: string, type?: string, tag?: Tag) => void
   onClose: () => void
   autoFocus?: boolean
+  /** Offer only tags of this type, and suggest new names only as this type. */
+  onlyType?: string
 }) {
   const [allTags, setAllTags] = useState<Tag[]>([])
   const [query, setQuery] = useState('')
@@ -61,7 +65,12 @@ export function Tagger({
   const carriedNames = new Set(carried.map((t) => t.name.toLowerCase()))
   const starts = (t: Tag) => (t.name.toLowerCase().startsWith(q) ? 0 : 1)
   const matches = allTags
-    .filter((t) => !mine.has(t.id) && t.name.toLowerCase().includes(q))
+    .filter(
+      (t) =>
+        !mine.has(t.id) &&
+        (!onlyType || t.type === onlyType) &&
+        t.name.toLowerCase().includes(q),
+    )
     .sort((a, b) => starts(a) - starts(b) || a.name.localeCompare(b.name))
     .slice(0, 8)
   const exact = allTags.find((t) => t.name.toLowerCase() === q)
@@ -76,9 +85,16 @@ export function Tagger({
   if (q && !exact && !pickedNew) {
     // One "suggest" choice per type: a plain tag first, then e.g. a version.
     for (const type of TAG_TYPES) {
+      if (onlyType && type.id !== onlyType) continue
       choices.push({ key: `new-${type.id}`, name: typed, type: type.id })
     }
   }
+  // Names are unique across every type, so a name another type already
+  // uses can't be suggested again here — say so rather than show nothing.
+  const otherType =
+    onlyType && exact && exact.type !== onlyType && !mine.has(exact.id)
+      ? exact
+      : null
   const current = Math.min(active, Math.max(choices.length - 1, 0))
 
   const pick = (choice: Choice) => {
@@ -122,7 +138,7 @@ export function Tagger({
       />
       {/* On an entry an empty box lists every tag to browse; in the submit
           form (no autofocus) the list waits for typing. */}
-      {focused && (q || autoFocus) && (choices.length > 0 || (exact && mine.has(exact.id))) && (
+      {focused && (q || autoFocus) && (choices.length > 0 || (exact && mine.has(exact.id)) || otherType) && (
         <ul className="tag-choices" role="listbox">
           {choices.map((choice, i) => (
             <li
@@ -156,43 +172,18 @@ export function Tagger({
           {exact && mine.has(exact.id) && (
             <li className="note">Already tagged “{exact.name}”</li>
           )}
+          {otherType && (
+            <li className="note">
+              “{otherType.name}” is already a{' '}
+              {tagTypeLabel(otherType.type).toLowerCase()}
+            </li>
+          )}
         </ul>
       )}
     </div>
   )
 }
 
-/** Line icons for the media. A medium with no icon here shows its name. */
-const MEDIUM_ICONS: Record<string, ReactNode> = {
-  video: (
-    <>
-      <path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 11" />
-      <rect x="2" y="6" width="14" height="12" rx="2" />
-    </>
-  ),
-  podcast: (
-    <>
-      <rect x="9" y="2" width="6" height="12" rx="3" />
-      <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
-      <path d="M12 18v4" />
-    </>
-  ),
-  article: (
-    <>
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" />
-      <path d="M14 2v5h5" />
-      <path d="M8 13h8M8 17h8M8 9h2" />
-    </>
-  ),
-  repo: (
-    <>
-      <circle cx="6" cy="6" r="2.5" />
-      <circle cx="6" cy="18" r="2.5" />
-      <circle cx="18" cy="8" r="2.5" />
-      <path d="M6 8.5v7M18 10.5c0 4-6 3-11 5.5" />
-    </>
-  ),
-}
 
 /** How many plain tags a feed card shows before folding the rest into "+N". */
 const SHOWN_ON_CARD = 2

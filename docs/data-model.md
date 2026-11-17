@@ -113,7 +113,7 @@ Collision edge (e.g. he upvoted his own attributed submission from the member ac
 - `description` — short, user-provided or auto-suggested (never full scraped content)
 - `source_site` — which handler produced this (linkedin / youtube / sn_community / manual / generic)
 - Tags — many-to-many via a join table (see Tagging below)
-- `title` — worked out from the link when it is submitted (migration `20261117000011`). Empty on entries from before that; they are shown by their description instead. `description` is now optional, but an entry must have a title or a description.
+- `title` — worked out from the link when it is submitted (migration `20261117000011`). Empty on entries from before that; they are shown by their description instead. `description` is now optional, but an entry must have a title or a description. Any signed-in account can change an entry's title, and nothing else on the row (migration `20261117000015`).
 - `thumbnail_path` — the name of the entry's thumbnail image in the public `thumbnails` storage bucket (images only, 5 MB at most). `thumbnail_strategy`, `thumbnail_rubric` and `thumbnail_notes` record how the picture was chosen, so a bad one can be traced to the rule behind it. Any signed-in account can add an image and remove one it added.
 - Attribution — many-to-many via `submission_attributions` (below), not a single FK.
 
@@ -125,7 +125,7 @@ Who actually made a submission's content — many-to-many (replaces the interim 
 
 **No role field** (author / publisher / featured — considered, dropped: see removal_requests below for why it turned out unnecessary). Attribution works like tagging: the submitter picks whichever profiles they recognize, can miss someone, and it's correctable later — unlike `submitted_by`, which is permanently fixed.
 
-**Who can write one.** The submitter of that submission, or a profile attributing *itself* (which additionally requires a verified identity, and is unreachable today — nothing in the app can grant verification). Rows can be deleted by the submitter of the submission, added 2026-08-10 so a mistyped credit isn't permanent. That delete rule is deliberately as wide as the insert rule, which means a submitter can also strip a self-attribution someone else added — worth revisiting when self-attribution gets a UI.
+**Who can write one.** Since migration `20261117000015`, any signed-in account can add or remove any credit on any entry ("everyone signed in is an admin for now"). The narrower rules below are still in place underneath, for when roles arrive. Originally: the submitter of that submission, or a profile attributing *itself* (which additionally requires a verified identity, and is unreachable today — nothing in the app can grant verification). Rows can be deleted by the submitter of the submission, added 2026-08-10 so a mistyped credit isn't permanent. That delete rule is deliberately as wide as the insert rule, which means a submitter can also strip a self-attribution someone else added — worth revisiting when self-attribution gets a UI.
 
 ### votes
 **Resolved (2026-07-17): upvote/downvote net score** (not star rating, not upvote-only). One vote per profile per submission; `value` is +1 or -1, displayed as a net score. The downvote doubles as a light "wrong/outdated" quality signal alongside moderation.

@@ -96,6 +96,24 @@ export async function attributeProfile(
   }
 }
 
+/** Renames an entry. Anyone signed in may (migration 15). */
+export async function retitleSubmission(
+  submissionId: string,
+  rawTitle: string,
+): Promise<string> {
+  const title = rawTitle.replace(/\s+/g, ' ').trim()
+  if (!title) throw new Error('A title can’t be blank.')
+  const { data, error } = await supabase
+    .from('submissions')
+    .update({ title })
+    .eq('id', submissionId)
+    .select('id')
+  if (error) throw new Error(error.message)
+  // A refused update changes no rows rather than raising an error.
+  if (data.length === 0) throw new Error('Sign in to edit the title.')
+  return title
+}
+
 export async function removeAttribution(
   submissionId: string,
   profileId: string,
