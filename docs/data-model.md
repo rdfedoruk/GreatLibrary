@@ -112,6 +112,8 @@ Collision edge (e.g. he upvoted his own attributed submission from the member ac
 - `description` — short, user-provided or auto-suggested (never full scraped content)
 - `source_site` — which handler produced this (linkedin / youtube / sn_community / manual / generic)
 - Tags — many-to-many via a join table (see Tagging below)
+- `title` — worked out from the link when it is submitted (migration `20261117000011`). Empty on entries from before that; they are shown by their description instead. `description` is now optional, but an entry must have a title or a description.
+- `thumbnail_path` — the name of the entry's thumbnail image in the public `thumbnails` storage bucket (images only, 5 MB at most). `thumbnail_strategy`, `thumbnail_rubric` and `thumbnail_notes` record how the picture was chosen, so a bad one can be traced to the rule behind it. Any signed-in account can add an image and remove one it added.
 - Attribution — many-to-many via `submission_attributions` (below), not a single FK.
 
 ### submission_attributions

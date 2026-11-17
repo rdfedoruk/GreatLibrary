@@ -120,13 +120,25 @@ test.describe('filtering the library by tag', () => {
     await expect(page.getByText(untagged)).toHaveCount(0)
 
     await page.getByRole('button', { name: 'Submit content' }).click()
-    await page.getByLabel('Link').fill(url)
-    await page.getByLabel('Description').fill(description)
+    await page.getByLabel('Link', { exact: true }).fill(url)
+    await page.getByLabel(/^Description/).fill(description)
     await page.getByRole('button', { name: 'Submit', exact: true }).click()
     await trackSubmissionAt(url)
 
     await expect(page).toHaveURL(/\/$/)
     await expect(page.getByText(description)).toBeVisible()
+
+    // Submitting works out a title and a thumbnail from the link. Nothing is
+    // at that address, so the title falls back to the site's name and the
+    // thumbnail is the generated card — but both are there, and the image
+    // really loads.
+    const card = cardFor(page, description)
+    await expect(card.getByRole('link', { name: 'example.com', exact: true })).toBeVisible()
+    const thumb = card.locator('img.submission-thumb')
+    await expect(thumb).toBeVisible()
+    await expect
+      .poll(() => thumb.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBe(1280)
   })
 
   // Nothing lists the vocabulary any more, so the only tags anyone is offered

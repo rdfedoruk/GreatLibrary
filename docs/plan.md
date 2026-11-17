@@ -23,15 +23,15 @@ The only place work is tracked. Finished lines get deleted, not ticked.
 
 ## Building now, in order
 
-1. **Tagging — built, not yet live.** Works against the test database.
-   Going live means applying the database change to production first,
-   then merging the code. That step deletes the 25 unused Module tags and
-   opens tag management to every signed-in account.
-2. **Thumbnails and titles.** On submit, work out the title and thumbnail
-   with the r6 rules, and show the thumbnail on the left of each entry.
-   Adds one small server-side piece and image storage.
-3. **Bring ContentTagger's 191 entries across**, with thumbnails and tags,
-   submitted by Andrew's account, authors left blank.
+1. **Thumbnails and titles — built, not yet live.** Works against the test
+   database. Going live: apply the database change to production (it only
+   adds things, so the live site is unaffected), then merge the code, then
+   check `/api/thumbnail` answers on the live site.
+2. **Bring ContentTagger's 191 entries across**, with thumbnails and tags,
+   submitted by Andrew's account, authors left blank. Also give the 8
+   entries already on the live site a title and thumbnail. Both need a way
+   to write images to the live site's storage from this machine, which
+   needs `npx supabase login` first.
 
 ## Left out of tagging on purpose
 

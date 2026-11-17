@@ -51,6 +51,14 @@ export function SubmissionCard({
         initialUserVote={item.userVote}
         currentUserId={currentUserId}
       />
+      {item.thumbnailUrl && (
+        <img
+          className="submission-thumb"
+          src={item.thumbnailUrl}
+          alt=""
+          loading="lazy"
+        />
+      )}
       <div className="submission-body">
         <a
           className="submission-link"
@@ -58,8 +66,11 @@ export function SubmissionCard({
           target="_blank"
           rel="noopener noreferrer"
         >
-          {item.description}
+          {item.title}
         </a>
+        {item.description && (
+          <p className="submission-description">{item.description}</p>
+        )}
         <p className="submission-meta">
           {hostOf(item.url)} · {SOURCE_LABELS[item.source_site]}
           {item.creators.length > 0 && (
@@ -83,7 +94,7 @@ export function SubmissionCard({
         </p>
         <SubmissionTags
           submissionId={item.id}
-          title={item.description}
+          title={item.title}
           tags={tags}
           canEdit={currentUserId !== null}
           onChange={(next) => {

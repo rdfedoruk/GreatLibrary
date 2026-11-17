@@ -124,7 +124,7 @@ function Home({
   return (
     <>
       {session && (
-        <SubmitForm userId={session.user.id} onSubmitted={handleSubmitted} />
+        <SubmitForm onSubmitted={handleSubmitted} />
       )}
       {filtering && (
         // The only way out of a filtered feed — there's no chip bar to click

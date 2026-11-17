@@ -188,6 +188,15 @@ export async function cleanUp(): Promise<void> {
   const users = madeUsers.splice(0)
 
   if (submissions.length > 0) {
+    // An entry submitted through the form has a thumbnail image stored for
+    // it; that goes too, or the test project fills up with pictures.
+    const { data } = await admin
+      .from('submissions')
+      .select('thumbnail_path')
+      .in('id', submissions)
+      .not('thumbnail_path', 'is', null)
+    const images = (data ?? []).map((row) => row.thumbnail_path as string)
+    if (images.length > 0) await admin.storage.from('thumbnails').remove(images)
     await admin.from('submissions').delete().in('id', submissions)
   }
   if (profiles.length > 0) {

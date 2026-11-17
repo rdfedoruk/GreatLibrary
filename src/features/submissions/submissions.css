@@ -57,6 +57,22 @@
   border-radius: 12px;
 }
 
+.submission-thumb {
+  width: 240px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--bg);
+  flex: none;
+  /* Keep its own shape: without this the row stretches it to the height of
+     the text beside it, and the picture gets cropped. */
+  align-self: flex-start;
+}
+
+.submission-description {
+  overflow-wrap: anywhere;
+}
+
 .submission-body {
   display: flex;
   flex-direction: column;
@@ -238,6 +254,16 @@
 @media (max-width: 620px) {
   .submission-card {
     gap: 10px;
+    flex-wrap: wrap;
+  }
+  /* The picture takes the row beside the votes; the text drops below it. */
+  .submission-thumb {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+  .submission-body {
+    flex-basis: 100%;
   }
 }
 

@@ -1,3 +1,9 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
+  "functions": {
+    "api/thumbnail.ts": {
+      "maxDuration": 60,
+      "includeFiles": "api/_thumbnail/fonts/**"
+    }
+  }
 }
