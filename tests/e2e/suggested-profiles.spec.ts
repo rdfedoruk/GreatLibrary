@@ -96,6 +96,25 @@ test.describe('suggested profiles', () => {
     await expect(page.locator('.submission-meta')).toContainText(fixed)
   })
 
+  test('a suggestion can be marked as an entity before it is approved', async ({ page }) => {
+    const member = await signIn(page, 'Entity Marker')
+    const submissionId = await seedSubmission(member.profileId, 'An episode worth hearing')
+    const name = unique('Some Podcast')
+
+    await suggestCredit(page, submissionId, name)
+
+    await page.goto('/bounties#profiles')
+    const row = rowFor(page, name)
+    await row.getByLabel(`${name} is a`).selectOption('entity')
+    await expect(row.getByLabel(`${name} is a`)).toHaveValue('entity')
+    await row.getByRole('button', { name: 'Approve' }).click()
+    await expect(row).toHaveCount(0)
+
+    await page.goto(`/submission/${submissionId}`)
+    await page.locator('.submission-meta').getByRole('link', { name }).click()
+    await expect(page.locator('.profile-type-chip')).toHaveText('Entity')
+  })
+
   test('a suggestion can be deleted, taking it off its entry', async ({ page }) => {
     const member = await signIn(page, 'Profile Deleter')
     const submissionId = await seedSubmission(member.profileId, 'A video of nothing much')

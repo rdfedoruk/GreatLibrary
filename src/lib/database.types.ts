@@ -488,6 +488,10 @@ export type Database = {
         Args: { p_display_name: string; p_id: string }
         Returns: undefined
       }
+      set_suggested_profile_type: {
+        Args: { p_id: string; p_type: Database["public"]["Enums"]["profile_type"] }
+        Returns: undefined
+      }
       slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {

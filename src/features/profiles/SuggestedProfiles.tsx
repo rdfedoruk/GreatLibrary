@@ -6,7 +6,9 @@ import {
   mergeProfile,
   renameSuggestedProfile,
   searchProfiles,
+  setSuggestedProfileType,
   type ProfileSearchResult,
+  type ProfileType,
   type SuggestedProfile,
 } from './api'
 import './profiles.css'
@@ -81,6 +83,17 @@ function SuggestedProfileRow({
         <button type="button" className="quiet" disabled={!renamed} onClick={rename}>
           Save
         </button>
+        <select
+          className="suggested-profile-type"
+          value={profile.type}
+          aria-label={`${profile.display_name} is a`}
+          onChange={(e) =>
+            act(() => setSuggestedProfileType(profile.id, e.target.value as ProfileType))
+          }
+        >
+          <option value="person">Person</option>
+          <option value="entity">Entity</option>
+        </select>
         <button type="button" onClick={() => act(() => approveProfile(profile.id))}>
           Approve
         </button>
