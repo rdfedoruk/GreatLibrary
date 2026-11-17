@@ -46,8 +46,8 @@
   font-size: 14px;
 }
 
-/* Profile chips: approved = solid light slate, dark text. Suggested = the
-   same colour as text and border only, as with tags. */
+/* Profile chips look like tags: approved = solid light blue, dark text.
+   Suggested = light-blue text and border, no fill. */
 .profile-chip {
   display: inline-flex;
   align-items: center;
@@ -58,14 +58,15 @@
   font-weight: 600;
   white-space: nowrap;
   text-decoration: none;
-  background: var(--profile);
-  color: var(--profile-ink);
-  border: 1px solid var(--profile);
+  background: var(--tag);
+  color: var(--tag-ink);
+  border: 1px solid var(--tag);
 }
 
 .profile-chip.suggested {
   background: transparent;
-  color: var(--profile);
+  color: var(--tag-line);
+  border-color: var(--tag-line);
 }
 
 /* An entity (a show, company, blog): squared-off corners instead of a pill. */
