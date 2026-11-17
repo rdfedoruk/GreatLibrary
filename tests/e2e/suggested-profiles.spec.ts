@@ -16,8 +16,7 @@ const unique = (name: string) => `${name} ${crypto.randomUUID().slice(0, 8)}`
 /** Credits a brand-new name on the entry, from the entry's own page. */
 async function suggestCredit(page: Page, submissionId: string, name: string) {
   await page.goto(`/submission/${submissionId}`)
-  const editor = page.getByRole('region', { name: 'People and organizations' })
-  await editor.getByRole('button', { name: 'Add attribution' }).click()
+  const editor = page.getByRole('region', { name: 'Who made this' })
   await editor.getByLabel('Search for who made this').fill(name)
   await editor.getByRole('button', { name: /Suggest .* as a new profile/ }).click()
   await expect(editor.getByRole('link', { name })).toBeVisible()

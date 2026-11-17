@@ -1,10 +1,55 @@
 import { expect, test } from '@playwright/test'
-import { cleanUp, seedSubmission, signIn, signOut } from './helpers'
+import { cleanUp, seedSubmission, signIn, signOut, trackProfileNamed } from './helpers'
 
-// The entry page as a curation record: anyone signed in can fix the title and
-// fill in each kind of tag from its own section.
+// The curation page, its own page alongside the discussion page: anyone
+// signed in can fix the title, credits, and each kind of tag from its own
+// section. The discussion shows here too.
 test.describe('curating an entry', () => {
   test.afterAll(cleanUp)
+
+  test('is reached from the feed card, and the old discussion page is unchanged', async ({
+    page,
+  }) => {
+    const owner = await signIn(page, 'Feed Visitor')
+    const entry = `An entry to find ${crypto.randomUUID().slice(0, 8)}`
+    const submissionId = await seedSubmission(owner.profileId, entry)
+
+    await page.goto('/')
+    const card = page.locator('.submission-card').filter({ hasText: entry })
+    await card.getByRole('link', { name: 'Curate' }).click()
+    await expect(page).toHaveURL(new RegExp(`/submission/${submissionId}/curate$`))
+    await expect(page.getByRole('region', { name: 'Curation' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /^Discussion/ })).toBeVisible()
+
+    // The speech bubble still opens the discussion page as before.
+    await page.goto('/')
+    await card.getByRole('link', { name: /^Discuss/ }).click()
+    await expect(page).toHaveURL(new RegExp(`/submission/${submissionId}$`))
+    await expect(page.getByRole('region', { name: 'Who made this' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Curation' })).toHaveCount(0)
+  })
+
+  test('a member can credit a creator on someone else’s entry', async ({ page }) => {
+    const owner = await signIn(page, 'Credit Owner')
+    const submissionId = await seedSubmission(owner.profileId, 'An entry to credit')
+    const creatorName = `Curated Creator ${crypto.randomUUID().slice(0, 8)}`
+
+    await signOut(page)
+    await signIn(page, 'Credit Curator')
+    await page.goto(`/submission/${submissionId}/curate`)
+
+    const credits = page.getByRole('region', { name: 'People and organizations' })
+    await expect(credits).toContainText('Nobody credited yet')
+    await credits.getByRole('button', { name: 'Add attribution' }).click()
+    await credits.getByLabel('Search for who made this').fill(creatorName)
+    await credits.getByRole('button', { name: /Suggest .* as a new profile/ }).click()
+    await expect(credits.getByRole('link', { name: creatorName })).toBeVisible()
+    await trackProfileNamed(creatorName)
+    await expect(page.locator('.submission-meta')).toContainText(creatorName)
+
+    await credits.getByRole('button', { name: `Remove ${creatorName}` }).click()
+    await expect(credits).toContainText('Nobody credited yet')
+  })
 
   test('a member can retitle someone else’s entry', async ({ page }) => {
     const owner = await signIn(page, 'Title Owner')
@@ -13,7 +58,7 @@ test.describe('curating an entry', () => {
 
     await signOut(page)
     await signIn(page, 'Title Fixer')
-    await page.goto(`/submission/${submissionId}`)
+    await page.goto(`/submission/${submissionId}/curate`)
 
     await page.getByRole('button', { name: 'Edit title' }).click()
     await page.getByLabel('Title', { exact: true }).fill(better)
@@ -30,7 +75,7 @@ test.describe('curating an entry', () => {
     const submissionId = await seedSubmission(member.profileId, 'An entry to tag by section')
     const version = `Zurich ${crypto.randomUUID().slice(0, 6)}`
 
-    await page.goto(`/submission/${submissionId}`)
+    await page.goto(`/submission/${submissionId}/curate`)
     const versions = page.getByRole('region', { name: 'Applicable versions' })
     await expect(versions).toContainText('Not yet identified')
 
@@ -58,7 +103,7 @@ test.describe('curating an entry', () => {
     const submissionId = await seedSubmission(owner.profileId, 'A read-only look')
 
     await signOut(page)
-    await page.goto(`/submission/${submissionId}`)
+    await page.goto(`/submission/${submissionId}/curate`)
     await expect(page.getByRole('region', { name: 'Topics' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Edit title' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: /^Add / })).toHaveCount(0)
