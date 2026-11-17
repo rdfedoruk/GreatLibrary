@@ -6,6 +6,8 @@ import {
   NavLink,
   Route,
   Routes,
+  useLocation,
+  useNavigate,
   useSearchParams,
 } from 'react-router-dom'
 import './App.css'
@@ -57,10 +59,14 @@ function Home({
   session,
   refreshKey,
   onSubmitted,
+  submitOpen,
+  onCloseSubmit,
 }: {
   session: ReturnType<typeof useSession>['session']
   refreshKey: number
   onSubmitted: () => void
+  submitOpen: boolean
+  onCloseSubmit: () => void
 }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [tags, setTags] = useState<Tag[] | null>(null)
@@ -126,8 +132,8 @@ function Home({
 
   return (
     <>
-      {session && (
-        <SubmitForm onSubmitted={handleSubmitted} />
+      {session && submitOpen && (
+        <SubmitForm onSubmitted={handleSubmitted} onClose={onCloseSubmit} />
       )}
       {filtering && (
         // The only way out of a filtered feed — there's no chip bar to click
@@ -145,6 +151,15 @@ function Home({
 function App() {
   const { session, loading } = useSession()
   const [refreshKey, setRefreshKey] = useState(0)
+  // The button is in the nav, the form on the feed; opening it from another
+  // page goes to the feed first.
+  const [submitOpen, setSubmitOpen] = useState(false)
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  // Leaving the feed closes the form, so it isn't waiting there on return.
+  useEffect(() => {
+    if (pathname !== '/') setSubmitOpen(false)
+  }, [pathname])
 
   return (
     <main className="shell">
@@ -180,9 +195,22 @@ function App() {
       </header>
 
       <nav className="site-nav" aria-label="Main">
-        <NavLink to="/" end>
+        <NavLink to="/" end onClick={() => setSubmitOpen(false)}>
           Feed
         </NavLink>
+        {session && (
+          <button
+            type="button"
+            aria-pressed={submitOpen}
+            onClick={() => {
+              // A second click closes it, like Cancel.
+              setSubmitOpen(!submitOpen)
+              navigate('/')
+            }}
+          >
+            Submit content
+          </button>
+        )}
         <NavLink to="/bounties">Curation Bounties</NavLink>
       </nav>
 
@@ -194,6 +222,8 @@ function App() {
               session={session}
               refreshKey={refreshKey}
               onSubmitted={() => setRefreshKey((k) => k + 1)}
+              submitOpen={submitOpen}
+              onCloseSubmit={() => setSubmitOpen(false)}
             />
           }
         />

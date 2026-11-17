@@ -79,4 +79,39 @@ test.describe('submitting content', () => {
     const { data } = await admin.from('profiles').select('id').eq('display_name', name)
     expect(data).toHaveLength(0)
   })
+
+  // The button sits in the main nav; the form opens on the feed.
+  test('the nav button opens the form on the feed from another page', async ({ page }) => {
+    await signIn(page, 'Nav Submitter')
+    await page.goto('/bounties')
+    await page.getByRole('navigation', { name: 'Main' })
+      .getByRole('button', { name: 'Submit content' }).click()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.locator('.submit-form')).toBeVisible()
+    await page.getByRole('button', { name: 'Cancel' }).click()
+    await expect(page.locator('.submit-form')).toHaveCount(0)
+  })
+
+  test('Feed, or the button again, closes the form', async ({ page }) => {
+    await signIn(page, 'Nav Closer')
+    await page.goto('/')
+    const nav = page.getByRole('navigation', { name: 'Main' })
+    const button = nav.getByRole('button', { name: 'Submit content' })
+    const form = page.locator('.submit-form')
+
+    await button.click()
+    await expect(form).toBeVisible()
+    await nav.getByRole('link', { name: 'Feed' }).click()
+    await expect(form).toHaveCount(0)
+
+    await button.click()
+    await expect(form).toBeVisible()
+    await button.click()
+    await expect(form).toHaveCount(0)
+
+    await button.click()
+    await nav.getByRole('link', { name: 'Curation Bounties' }).click()
+    await nav.getByRole('link', { name: 'Feed' }).click()
+    await expect(form).toHaveCount(0)
+  })
 })

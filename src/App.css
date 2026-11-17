@@ -52,6 +52,7 @@
 
 .site-nav {
   display: flex;
+  align-items: center;
   gap: 6px;
   margin: -8px 0 20px;
 }

@@ -10,6 +10,7 @@ import './submissions.css'
 
 interface SubmitFormProps {
   onSubmitted: () => void
+  onClose: () => void
 }
 
 function validUrl(value: string): boolean {
@@ -50,8 +51,8 @@ async function addCreditsAndTags(
   return failed
 }
 
-export function SubmitForm({ onSubmitted }: SubmitFormProps) {
-  const [open, setOpen] = useState(false)
+/** The form only; the button that opens it sits in the main nav. */
+export function SubmitForm({ onSubmitted, onClose }: SubmitFormProps) {
   const [url, setUrl] = useState('')
   const [profiles, setProfiles] = useState<PickedProfile[]>([])
   const [tags, setTags] = useState<Tag[]>([])
@@ -63,17 +64,7 @@ export function SubmitForm({ onSubmitted }: SubmitFormProps) {
     setProfiles([])
     setTags([])
     setError(null)
-    setOpen(false)
-  }
-
-  if (!open) {
-    return (
-      <div className="submit-bar">
-        <button type="button" onClick={() => setOpen(true)}>
-          Submit content
-        </button>
-      </div>
-    )
+    onClose()
   }
 
   const handleSubmit = (event: FormEvent) => {
