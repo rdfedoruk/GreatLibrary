@@ -295,3 +295,12 @@
     width: 100%;
   }
 }
+
+/* Choosing tags while submitting */
+.tag-picker .tag-line {
+  margin-bottom: 8px;
+}
+
+.tag-picker .tagger {
+  max-width: none;
+}

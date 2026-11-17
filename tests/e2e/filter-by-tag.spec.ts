@@ -5,6 +5,7 @@ import {
   seedSubmission,
   signIn,
   tagSubmission,
+  trackProfileNamed,
   trackSubmissionAt,
 } from './helpers'
 
@@ -116,19 +117,24 @@ test.describe('filtering the library by tag', () => {
   }) => {
     await signIn(page, `Journey Filter Submitter ${stamp}`)
     const url = `https://example.com/${crypto.randomUUID()}`
-    const description = `Submitted while filtered ${crypto.randomUUID().slice(0, 8)}`
+    // Nothing is at the link, so its title is just the site's name; the
+    // credited name is what tells this entry apart.
+    const description = `Submitted While Filtered ${crypto.randomUUID().slice(0, 8)}`
 
     await page.goto('/?tag=video')
     await expect(page.getByText(untagged)).toHaveCount(0)
 
     await page.getByRole('button', { name: 'Submit content' }).click()
     await page.getByLabel('Link', { exact: true }).fill(url)
-    await page.getByLabel(/^Description/).fill(description)
+    await page.getByLabel('Attributions').fill(description)
+    await page.getByRole('option', { name: /Suggest new profile/ }).click()
     await page.getByRole('button', { name: 'Submit', exact: true }).click()
     await trackSubmissionAt(url)
 
     await expect(page).toHaveURL(/\/$/)
     await expect(page.getByText(description)).toBeVisible()
+    await trackSubmissionAt(url)
+    await trackProfileNamed(description)
 
     // Submitting works out a title and a thumbnail from the link. Nothing is
     // at that address, so the title falls back to the site's name and the

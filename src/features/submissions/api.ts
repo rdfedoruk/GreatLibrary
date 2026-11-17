@@ -43,14 +43,13 @@ export interface SubmissionFilter {
 
 export interface NewSubmission {
   url: string
-  description: string
 }
 
 // Submitting goes through the site's one server-side piece (api/thumbnail.ts),
 // which visits the link, works out its title and thumbnail, and creates the
-// entry as the signed-in person. Tags are not part of submitting: they are
-// suggested afterwards, on the entry itself, by anyone.
-export async function createSubmission(input: NewSubmission): Promise<void> {
+// entry as the signed-in person. Returns the new entry's id, so the submit
+// form can then credit profiles and add tags to it.
+export async function createSubmission(input: NewSubmission): Promise<string> {
   const { data } = await supabase.auth.getSession()
   const token = data.session?.access_token
   if (!token) throw new Error('Sign in to submit a link.')
@@ -74,6 +73,8 @@ export async function createSubmission(input: NewSubmission): Promise<void> {
     } | null
     throw new Error(body?.error ?? 'Something went wrong. Try again.')
   }
+  const { id } = (await response.json()) as { id: string }
+  return id
 }
 
 // Credits a profile with making this submission's content — separate from
