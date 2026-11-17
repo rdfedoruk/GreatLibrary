@@ -397,6 +397,16 @@
   color: var(--profile);
 }
 
+/* An entity (a show, company, blog): squared-off corners instead of a pill,
+   matching profile chips. Its initials badge squares off too. */
+.attribution-chip.entity {
+  border-radius: 5px;
+}
+
+.attribution-chip.entity .attribution-avatar {
+  border-radius: 4px;
+}
+
 .attribution-chip .profile-link,
 .attribution-chip .profile-link:hover {
   color: inherit;

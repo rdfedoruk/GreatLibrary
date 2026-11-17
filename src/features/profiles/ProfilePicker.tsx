@@ -1,5 +1,5 @@
 import { useEffect, useState, type KeyboardEvent } from 'react'
-import { searchProfiles, type ProfileSearchResult, type ProfileStatus } from './api'
+import { searchProfiles, type ProfileSearchResult, type ProfileStatus, type ProfileType } from './api'
 import './profiles.css'
 
 /**
@@ -11,6 +11,7 @@ export interface PickedProfile {
   id: string | null
   name: string
   status: ProfileStatus
+  type: ProfileType
 }
 
 /** Type-ahead over profiles, for crediting who made an entry being submitted. */
@@ -54,12 +55,12 @@ export function ProfilePicker({
 
   const choices: PickedProfile[] = matches
     .filter((m) => !isPicked(m.display_name))
-    .map((m) => ({ id: m.id, name: m.display_name, status: m.status }))
+    .map((m) => ({ id: m.id, name: m.display_name, status: m.status, type: m.type }))
   // An exact match means "use that profile", not "make a second one with the
   // same name" — the commonest way duplicates get created.
   const exact = matches.some((m) => m.display_name.toLowerCase() === lower)
   if (trimmed && !exact && !isPicked(trimmed)) {
-    choices.push({ id: null, name: trimmed, status: 'suggested' })
+    choices.push({ id: null, name: trimmed, status: 'suggested', type: 'person' })
   }
   const current = Math.min(active, Math.max(choices.length - 1, 0))
 
@@ -93,7 +94,7 @@ export function ProfilePicker({
           {picked.map((p) => (
             <li
               key={p.id ?? `new:${p.name}`}
-              className={`profile-chip ${p.status}`}
+              className={`profile-chip ${p.status} ${p.type}`}
               title={p.status === 'suggested' ? 'Suggested: awaiting approval' : undefined}
             >
               {p.name}
@@ -137,7 +138,7 @@ export function ProfilePicker({
                 onMouseMove={() => setActive(i)}
               >
                 {choice.id === null && 'Suggest new profile'}
-                <span className={`profile-chip ${choice.status}`}>{choice.name}</span>
+                <span className={`profile-chip ${choice.status} ${choice.type}`}>{choice.name}</span>
               </li>
             ))}
           </ul>

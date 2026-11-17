@@ -134,6 +134,7 @@ export interface SuggestedProfile {
   id: string
   display_name: string
   slug: string
+  type: ProfileType
   /** The entries that credit it, so whoever approves can see the context. */
   credits: { id: string; title: string; url: string }[]
 }
@@ -143,7 +144,7 @@ export async function fetchSuggestedProfiles(): Promise<SuggestedProfile[]> {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      'id, display_name, slug, submission_attributions ( submissions ( id, title, description, url ) )',
+      'id, display_name, slug, type, submission_attributions ( submissions ( id, title, description, url ) )',
     )
     .eq('status', 'suggested')
     .order('created_at')
@@ -153,6 +154,7 @@ export async function fetchSuggestedProfiles(): Promise<SuggestedProfile[]> {
     id: row.id,
     display_name: row.display_name,
     slug: row.slug,
+    type: row.type,
     credits: row.submission_attributions.flatMap((a) =>
       a.submissions
         ? [
@@ -186,6 +188,18 @@ export async function mergeProfile(from: string, into: string): Promise<void> {
 /** Deletes the suggestion and takes it off every entry that credits it. */
 export async function deleteSuggestedProfile(id: string): Promise<void> {
   const { error } = await supabase.rpc('delete_suggested_profile', { p_id: id })
+  if (error) throw new Error(error.message)
+}
+
+/** Marks a suggestion as a person or an entity (a show, company, blog). */
+export async function setSuggestedProfileType(
+  id: string,
+  type: ProfileType,
+): Promise<void> {
+  const { error } = await supabase.rpc('set_suggested_profile_type', {
+    p_id: id,
+    p_type: type,
+  })
   if (error) throw new Error(error.message)
 }
 

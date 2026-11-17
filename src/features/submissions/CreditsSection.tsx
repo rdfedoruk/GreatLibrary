@@ -75,6 +75,7 @@ export function CreditsSection({
             name: profile.display_name,
             slug: profile.slug,
             status: profile.status,
+            type: profile.type,
           },
         ])
         setQuery('')
@@ -100,6 +101,7 @@ export function CreditsSection({
               name: profile.display_name,
               slug: profile.slug,
               status: profile.status,
+              type: profile.type,
             },
           ])
           setQuery('')
@@ -158,7 +160,7 @@ export function CreditsSection({
           {creators.map((creator) => (
             <li
               key={creator.id}
-              className={`attribution-chip ${creator.status}`}
+              className={`attribution-chip ${creator.status} ${creator.type}`}
               title={
                 creator.status === 'suggested'
                   ? 'Suggested: awaiting approval'

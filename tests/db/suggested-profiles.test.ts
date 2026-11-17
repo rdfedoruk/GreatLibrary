@@ -221,6 +221,42 @@ describe('suggested profiles', () => {
     expect(after.data?.slug).toBe(before.data?.slug)
   })
 
+  it('lets any signed-in account mark a suggestion as an entity, and back', async () => {
+    const suggester = await createTestUser('Entity Suggester')
+    const marker = await createTestUser('Entity Marker')
+    const id = await suggest(suggester, unique('Some Podcast'))
+    const typeOf = async () =>
+      (await admin.from('profiles').select('type').eq('id', id).single()).data?.type
+
+    const visitor = await anonClient().rpc('set_suggested_profile_type', {
+      p_id: id,
+      p_type: 'entity',
+    })
+    expect(visitor.error).not.toBeNull()
+    expect(await typeOf()).toBe('person')
+
+    const { error } = await marker.client.rpc('set_suggested_profile_type', {
+      p_id: id,
+      p_type: 'entity',
+    })
+    expect(error).toBeNull()
+    expect(await typeOf()).toBe('entity')
+
+    await marker.client.rpc('set_suggested_profile_type', { p_id: id, p_type: 'person' })
+    expect(await typeOf()).toBe('person')
+  })
+
+  it('refuses changing the type of an approved profile', async () => {
+    const member = await createTestUser('Type Changer')
+    const { error } = await member.client.rpc('set_suggested_profile_type', {
+      p_id: member.profileId,
+      p_type: 'entity',
+    })
+    expect(error).not.toBeNull()
+    const { data } = await admin.from('profiles').select('type').eq('id', member.profileId).single()
+    expect(data?.type).toBe('person')
+  })
+
   it('refuses renaming an approved profile, a blank name, or a visitor renaming', async () => {
     const member = await createTestUser('Renamer')
     const other = await createTestUser('Approved Already')

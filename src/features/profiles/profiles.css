@@ -68,6 +68,11 @@
   color: var(--profile);
 }
 
+/* An entity (a show, company, blog): squared-off corners instead of a pill. */
+.profile-chip.entity {
+  border-radius: 5px;
+}
+
 a.profile-chip:hover {
   text-decoration: underline;
 }

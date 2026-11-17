@@ -6,7 +6,9 @@ import {
   mergeProfile,
   renameSuggestedProfile,
   searchProfiles,
+  setSuggestedProfileType,
   type ProfileSearchResult,
+  type ProfileType,
   type SuggestedProfile,
 } from './api'
 import './profiles.css'
@@ -63,7 +65,7 @@ function SuggestedProfileRow({
   return (
     <li className="suggested-profile" aria-label={profile.display_name}>
       <div className="suggested-profile-head">
-        <Link className="profile-chip suggested" to={`/profile/${profile.slug}`}>
+        <Link className={`profile-chip suggested ${profile.type}`} to={`/profile/${profile.slug}`}>
           {profile.display_name}
         </Link>
         <input
@@ -81,6 +83,17 @@ function SuggestedProfileRow({
         <button type="button" className="quiet" disabled={!renamed} onClick={rename}>
           Save
         </button>
+        <select
+          className="suggested-profile-type"
+          value={profile.type}
+          aria-label={`${profile.display_name} is a`}
+          onChange={(e) =>
+            act(() => setSuggestedProfileType(profile.id, e.target.value as ProfileType))
+          }
+        >
+          <option value="person">Person</option>
+          <option value="entity">Entity</option>
+        </select>
         <button type="button" onClick={() => act(() => approveProfile(profile.id))}>
           Approve
         </button>
@@ -102,7 +115,7 @@ function SuggestedProfileRow({
                     type="button"
                     onClick={() => act(() => mergeProfile(profile.id, match.id))}
                   >
-                    Merge into <span className="profile-chip">{match.display_name}</span>
+                    Merge into <span className={`profile-chip ${match.type}`}>{match.display_name}</span>
                   </button>
                 </li>
               ))}
