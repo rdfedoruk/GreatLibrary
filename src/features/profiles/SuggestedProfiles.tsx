@@ -65,7 +65,7 @@ function SuggestedProfileRow({
   return (
     <li className="suggested-profile" aria-label={profile.display_name}>
       <div className="suggested-profile-head">
-        <Link className="profile-chip suggested" to={`/profile/${profile.slug}`}>
+        <Link className={`profile-chip suggested ${profile.type}`} to={`/profile/${profile.slug}`}>
           {profile.display_name}
         </Link>
         <input
@@ -115,7 +115,7 @@ function SuggestedProfileRow({
                     type="button"
                     onClick={() => act(() => mergeProfile(profile.id, match.id))}
                   >
-                    Merge into <span className="profile-chip">{match.display_name}</span>
+                    Merge into <span className={`profile-chip ${match.type}`}>{match.display_name}</span>
                   </button>
                 </li>
               ))}

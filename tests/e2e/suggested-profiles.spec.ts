@@ -111,6 +111,9 @@ test.describe('suggested profiles', () => {
     await expect(row).toHaveCount(0)
 
     await page.goto(`/submission/${submissionId}`)
+    const chip = page.locator('.attribution-chip', { hasText: name })
+    await expect(chip).toHaveClass(/\bentity\b/)
+    await expect(chip).toHaveCSS('border-radius', '5px')
     await page.locator('.submission-meta').getByRole('link', { name }).click()
     await expect(page.locator('.profile-type-chip')).toHaveText('Entity')
   })

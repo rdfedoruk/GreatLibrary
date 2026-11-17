@@ -2,7 +2,7 @@ import { supabase } from '../../lib/supabase'
 import type { Database } from '../../lib/database.types'
 import type { VoteValue } from '../votes'
 import type { Tag } from '../tags'
-import type { ProfileStatus } from '../profiles'
+import type { ProfileStatus, ProfileType } from '../profiles'
 
 export type SourceSite = Database['public']['Enums']['source_site']
 export type SubmissionTag = Tag
@@ -13,6 +13,8 @@ export interface ProfileRef {
   slug: string
   /** Credited profiles can be suggested (a typed-in name not yet approved). */
   status: ProfileStatus
+  /** An entity (a show, company, blog) chip is drawn squarer than a person's. */
+  type: ProfileType
 }
 
 export interface SubmissionListItem {
@@ -129,7 +131,7 @@ export async function removeAttribution(
 
 const SELECT = `id, url, title, description, thumbnail_path, source_site, created_at,
    submitter:profiles!submissions_submitted_by_fkey ( id, display_name, slug ),
-   submission_attributions ( profiles ( id, display_name, slug, status ) ),
+   submission_attributions ( profiles ( id, display_name, slug, status, type ) ),
    submission_tags ( tags ( id, name, status, type ) ),
    votes ( user_id, value ),
    comments ( count )`
@@ -149,6 +151,7 @@ type SubmissionRow = {
       display_name: string
       slug: string
       status: string
+      type: ProfileType
     } | null
   }[]
   submission_tags: {
@@ -183,6 +186,7 @@ function toItem(
       name: row.submitter.display_name,
       slug: row.submitter.slug,
       status: 'approved',
+      type: 'person',
     },
     creators: row.submission_attributions.flatMap((a) =>
       a.profiles
@@ -192,6 +196,7 @@ function toItem(
               name: a.profiles.display_name,
               slug: a.profiles.slug,
               status: a.profiles.status as ProfileStatus,
+              type: a.profiles.type,
             },
           ]
         : [],
