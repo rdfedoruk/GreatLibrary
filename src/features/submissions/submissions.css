@@ -58,6 +58,35 @@
   flex-direction: column;
 }
 
+/* The main feed: tiles, picture on top, as many across as fit. */
+.submission-list.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 16px;
+}
+
+.submission-list.grid .submission-card {
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+.submission-list.grid .submission-thumb {
+  width: 100%;
+}
+
+/* Two lines at most; the rest is on the entry's own page. */
+.submission-list.grid .submission-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.shell-wide .submit-form {
+  max-width: 880px;
+}
+
 .submission-card {
   display: flex;
   gap: 18px;
@@ -495,6 +524,14 @@
   }
   .submission-body {
     flex-basis: 100%;
+  }
+  /* A tile already stacks; wrapping would push its text into a second
+     column off the right edge. */
+  .submission-list.grid .submission-card {
+    flex-wrap: nowrap;
+  }
+  .submission-list.grid .submission-body {
+    flex-basis: auto;
   }
 }
 
