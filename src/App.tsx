@@ -208,6 +208,20 @@ function App() {
               navigate('/')
             }}
           >
+            <svg
+              className="nav-plus"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 4v16M4 12h16"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </svg>
             Submit content
           </button>
         )}

@@ -57,8 +57,11 @@
   margin: -8px 0 20px;
 }
 
-.site-nav a {
+/* `.shell` in front so these beat the amber default for buttons below. */
+.shell .site-nav a,
+.shell .site-nav button {
   color: var(--muted);
+  background: transparent;
   text-decoration: none;
   font-weight: 600;
   padding: 6px 12px;
@@ -66,12 +69,21 @@
   border: 1px solid transparent;
 }
 
-.site-nav a:hover {
-  border-color: var(--line);
-  color: var(--text);
+.shell .site-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.site-nav a[aria-current] {
+.shell .site-nav a:hover,
+.shell .site-nav button:hover {
+  border-color: var(--line);
+  color: var(--text);
+  filter: none;
+}
+
+.shell .site-nav a[aria-current],
+.shell .site-nav button[aria-pressed='true'] {
   color: var(--text);
   border-color: var(--line);
   background: var(--surface);
