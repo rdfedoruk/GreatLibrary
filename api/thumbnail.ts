@@ -5,6 +5,10 @@
 //   POST /api/thumbnail   { url, description? }   (signed in)
 //     → works out the title and thumbnail, stores the image, creates the
 //       entry, and answers { id }.
+//   POST /api/thumbnail   { regenerate: id }      (signed in)
+//     → draws a fresh card from the entry's current title (for when the link
+//       hides its real title, e.g. LinkedIn's "Sign Up" wall), swaps it in,
+//       deletes the old image, and answers { thumbnailPath }.
 //   GET  /api/thumbnail
 //     → a health check: draws one card and reports its size. Fetches nothing.
 //
@@ -73,13 +77,14 @@ function normalizeUrl(input: unknown): string {
   return url.href;
 }
 
-async function submit(req: IncomingMessage) {
+/** A Supabase client acting as the signed-in person, and who they are. */
+async function signedIn(req: IncomingMessage, refusal: string) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const publishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !publishableKey) throw new Error('The server is missing its Supabase settings');
 
   const token = (req.headers.authorization ?? '').replace(/^Bearer\s+/i, '');
-  if (!token) throw new UserError(401, 'Sign in to submit a link');
+  if (!token) throw new UserError(401, refusal);
 
   // A client that carries the person's own token: every read and write below
   // is theirs, and subject to the same rules as in their browser.
@@ -88,9 +93,12 @@ async function submit(req: IncomingMessage) {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
   const { data: auth, error: authError } = await supabase.auth.getUser(token);
-  if (authError || !auth.user) throw new UserError(401, 'Sign in to submit a link');
+  if (authError || !auth.user) throw new UserError(401, refusal);
+  return { supabase, user: auth.user };
+}
 
-  const body = await readBody(req);
+async function submit(req: IncomingMessage, body: Record<string, unknown>) {
+  const { supabase, user } = await signedIn(req, 'Sign in to submit a link');
   const url = normalizeUrl(body.url);
   const description = typeof body.description === 'string' ? body.description.trim() : '';
 
@@ -114,7 +122,7 @@ async function submit(req: IncomingMessage) {
       title: result.title,
       description,
       source_site: 'manual',
-      submitted_by: auth.user.id,
+      submitted_by: user.id,
       thumbnail_path: path,
       thumbnail_strategy: result.strategy,
       thumbnail_rubric: RUBRIC,
@@ -132,6 +140,58 @@ async function submit(req: IncomingMessage) {
   return { id: inserted.data.id as string };
 }
 
+// Draws a plain title card from the entry's title as it stands now. The link
+// itself isn't visited again, since that is what gave the bad title. The old
+// image is deleted only once the entry points at the new one; the database
+// refuses to delete an image an entry is still showing.
+async function regenerate(req: IncomingMessage, id: unknown) {
+  const { supabase } = await signedIn(req, 'Sign in to regenerate a thumbnail');
+  if (typeof id !== 'string' || !id) throw new UserError(400, 'Which entry?');
+
+  const found = await supabase
+    .from('submissions')
+    .select('url, title, description, thumbnail_path')
+    .eq('id', id)
+    .maybeSingle();
+  if (found.error) throw new Error(found.error.message);
+  if (!found.data) throw new UserError(404, 'That entry is not in the library.');
+
+  const title = found.data.title?.trim() || found.data.description.trim();
+  const label = new URL(found.data.url).hostname.replace(/^www\./, '');
+  const image = await renderCard(title, label);
+
+  const path = `${randomUUID()}.png`;
+  const upload = await supabase.storage.from(BUCKET).upload(path, image, {
+    contentType: 'image/png',
+    cacheControl: '31536000',
+  });
+  if (upload.error) throw new Error(`Could not store the thumbnail: ${upload.error.message}`);
+
+  const updated = await supabase
+    .from('submissions')
+    .update({
+      thumbnail_path: path,
+      thumbnail_strategy: 'regenerated',
+      thumbnail_rubric: RUBRIC,
+      thumbnail_notes: 'card drawn from the edited title',
+    })
+    .eq('id', id)
+    .select('id');
+  if (updated.error || updated.data.length === 0) {
+    await supabase.storage.from(BUCKET).remove([path]);
+    throw new Error(updated.error?.message ?? 'The entry refused the new thumbnail');
+  }
+
+  // A leftover old image costs a little storage and nothing else, so failing
+  // to delete it doesn't undo the regenerate.
+  const old = found.data.thumbnail_path;
+  if (old) {
+    const removed = await supabase.storage.from(BUCKET).remove([old]);
+    if (removed.error) console.error(`Could not delete old thumbnail ${old}: ${removed.error.message}`);
+  }
+  return { thumbnailPath: path };
+}
+
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   try {
     if (req.method === 'GET') {
@@ -139,7 +199,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       return send(res, 200, { ok: true, rubric: RUBRIC, cardBytes: card.length });
     }
     if (req.method !== 'POST') return send(res, 405, { error: 'Method not allowed' });
-    send(res, 200, await submit(req));
+    const body = await readBody(req);
+    send(res, 200, body.regenerate !== undefined ? await regenerate(req, body.regenerate) : await submit(req, body));
   } catch (err) {
     if (err instanceof UserError) return send(res, err.status, { error: err.message });
     console.error(err);

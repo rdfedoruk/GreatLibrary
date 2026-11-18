@@ -37,6 +37,8 @@ Nothing queued.
   Host), curation flags (Possibly outdated, Wrong info, Deprecated),
   the "Recent curation" history, the "5 of 7 complete" / "Still needed"
   checklist, and replies under comments.
+- From "Regenerate thumbnail": it always draws a plain title card (a real
+  picture the link had is lost), doesn't revisit the link, and has no undo.
 
 ## Loose ends
 

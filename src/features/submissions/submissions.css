@@ -229,6 +229,18 @@
   align-self: flex-start;
 }
 
+.entry-thumb-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  flex: none;
+}
+
+.entry-thumb-col .entry-thumb {
+  align-self: auto;
+}
+
 .entry-body {
   display: flex;
   flex-direction: column;
@@ -360,6 +372,7 @@
     flex-direction: column;
     gap: 14px;
   }
+  .entry-thumb-col,
   .entry-thumb {
     width: 100%;
   }

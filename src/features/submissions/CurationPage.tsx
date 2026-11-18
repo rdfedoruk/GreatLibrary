@@ -6,6 +6,7 @@ import { VoteControl } from '../votes'
 import { CreditsSection } from './CreditsSection'
 import {
   fetchSubmission,
+  regenerateThumbnail,
   retitleSubmission,
   type ProfileRef,
   type SubmissionListItem,
@@ -77,6 +78,7 @@ export function CurationPage({
         item={item}
         currentUserId={currentUserId}
         onRetitled={(title) => update({ title })}
+        onThumbnail={(thumbnailUrl) => update({ thumbnailUrl })}
       />
 
       <section className="curation-card" aria-label="Curation">
@@ -103,15 +105,30 @@ function EntryHeader({
   item,
   currentUserId,
   onRetitled,
+  onThumbnail,
 }: {
   item: SubmissionListItem
   currentUserId: string | null
   onRetitled: (title: string) => void
+  onThumbnail: (thumbnailUrl: string) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(item.title)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [regenerating, setRegenerating] = useState(false)
+
+  const regenerate = () => {
+    setRegenerating(true)
+    setError(null)
+    regenerateThumbnail(item.id)
+      .then((thumbnailUrl) => onThumbnail(thumbnailUrl))
+      .catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : String(err)),
+      )
+      .finally(() => setRegenerating(false))
+  }
 
   const save = (event: FormEvent) => {
     event.preventDefault()
@@ -130,8 +147,23 @@ function EntryHeader({
 
   return (
     <article className="entry-header">
-      {item.thumbnailUrl && (
-        <img className="entry-thumb" src={item.thumbnailUrl} alt="" />
+      {(item.thumbnailUrl || currentUserId !== null) && (
+        <div className="entry-thumb-col">
+          {item.thumbnailUrl && (
+            <img className="entry-thumb" src={item.thumbnailUrl} alt="" />
+          )}
+          {currentUserId !== null && (
+            <button
+              type="button"
+              className="quiet"
+              disabled={regenerating}
+              title="Draw a new thumbnail from the title above, replacing the old one"
+              onClick={regenerate}
+            >
+              {regenerating ? 'Regenerating…' : 'Regenerate thumbnail'}
+            </button>
+          )}
+        </div>
       )}
       <div className="entry-body">
         {editing ? (

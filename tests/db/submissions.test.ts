@@ -4,6 +4,7 @@ import {
   anonClient,
   createTestUser,
   deleteTestUsers,
+  seedSubmission,
   type TestUser,
 } from './helpers'
 
@@ -123,12 +124,16 @@ describe('submissions', () => {
       expect(error).not.toBeNull()
     })
 
-    it('lets a member remove their own image but not someone else‘s', async () => {
+    // Migration 17: anyone signed in may delete an image no entry uses (the
+    // old one, after a regenerate), but not one an entry is showing.
+    it('refuses removing someone else‘s image while an entry shows it', async () => {
       const path = `test-${crypto.randomUUID()}.png`
       await member.client.storage
         .from('thumbnails')
         .upload(path, png, { contentType: 'image/png' })
       made.push(path)
+      const id = await seedSubmission(member.profileId)
+      await admin.from('submissions').update({ thumbnail_path: path }).eq('id', id)
       const other = await createTestUser('Image Remover')
 
       await other.client.storage.from('thumbnails').remove([path])
@@ -137,9 +142,29 @@ describe('submissions', () => {
         { cache: 'no-store' },
       )
       expect(still.status).toBe(200)
+    })
 
-      const { data } = await member.client.storage.from('thumbnails').remove([path])
+    it('lets any member remove an image no entry uses', async () => {
+      const path = `test-${crypto.randomUUID()}.png`
+      await member.client.storage
+        .from('thumbnails')
+        .upload(path, png, { contentType: 'image/png' })
+      made.push(path)
+      const other = await createTestUser('Unused Image Remover')
+
+      const { data } = await other.client.storage.from('thumbnails').remove([path])
       expect(data).toHaveLength(1)
+    })
+
+    it('refuses a signed-out visitor removing an unused image', async () => {
+      const path = `test-${crypto.randomUUID()}.png`
+      await member.client.storage
+        .from('thumbnails')
+        .upload(path, png, { contentType: 'image/png' })
+      made.push(path)
+
+      const { data } = await anonClient().storage.from('thumbnails').remove([path])
+      expect(data ?? []).toHaveLength(0)
     })
   })
 

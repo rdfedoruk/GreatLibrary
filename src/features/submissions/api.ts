@@ -66,9 +66,29 @@ export interface NewSubmission {
 // entry as the signed-in person. Returns the new entry's id, so the submit
 // form can then credit profiles and add tags to it.
 export async function createSubmission(input: NewSubmission): Promise<string> {
+  const { id } = await callThumbnailApi<{ id: string }>(
+    input,
+    'Sign in to submit a link.',
+  )
+  return id
+}
+
+// Replaces an entry's thumbnail with a card drawn from its current title, and
+// deletes the old image. For links whose real title the site can't see, such
+// as LinkedIn posts behind a "Sign Up" wall. Returns the new image's address.
+export async function regenerateThumbnail(submissionId: string): Promise<string> {
+  const { thumbnailPath } = await callThumbnailApi<{ thumbnailPath: string }>(
+    { regenerate: submissionId },
+    'Sign in to regenerate the thumbnail.',
+  )
+  return supabase.storage.from('thumbnails').getPublicUrl(thumbnailPath).data
+    .publicUrl
+}
+
+async function callThumbnailApi<T>(body: unknown, signInFirst: string): Promise<T> {
   const { data } = await supabase.auth.getSession()
   const token = data.session?.access_token
-  if (!token) throw new Error('Sign in to submit a link.')
+  if (!token) throw new Error(signInFirst)
 
   let response: Response
   try {
@@ -78,7 +98,7 @@ export async function createSubmission(input: NewSubmission): Promise<string> {
         'content-type': 'application/json',
         authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(input),
+      body: JSON.stringify(body),
     })
   } catch {
     throw new Error('Could not reach the site. Check your connection and try again.')
@@ -89,8 +109,7 @@ export async function createSubmission(input: NewSubmission): Promise<string> {
     } | null
     throw new Error(body?.error ?? 'Something went wrong. Try again.')
   }
-  const { id } = (await response.json()) as { id: string }
-  return id
+  return (await response.json()) as T
 }
 
 // Credits a profile with making this submission's content — separate from
