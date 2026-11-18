@@ -55,6 +55,36 @@ describe('open curation', () => {
     expect(error).not.toBeNull()
   })
 
+  it('lets any signed-in account swap the thumbnail on someone else’s entry', async () => {
+    const owner = await createTestUser('Thumb Owner')
+    const curator = await createTestUser('Thumb Curator')
+    const id = await seedSubmission(owner.profileId)
+
+    const { error } = await curator.client
+      .from('submissions')
+      .update({
+        thumbnail_path: 'new.png',
+        thumbnail_strategy: 'regenerated',
+        thumbnail_rubric: 'r6',
+        thumbnail_notes: 'drawn from the edited title',
+      })
+      .eq('id', id)
+
+    expect(error).toBeNull()
+    const row = await admin.from('submissions').select('thumbnail_path').eq('id', id).single()
+    expect(row.data?.thumbnail_path).toBe('new.png')
+  })
+
+  it('refuses a signed-out visitor swapping the thumbnail', async () => {
+    const owner = await createTestUser('Thumb Guard')
+    const id = await seedSubmission(owner.profileId)
+
+    await anonClient().from('submissions').update({ thumbnail_path: 'x.png' }).eq('id', id)
+
+    const row = await admin.from('submissions').select('thumbnail_path').eq('id', id).single()
+    expect(row.data?.thumbnail_path).toBeNull()
+  })
+
   it('lets any signed-in account credit and uncredit on someone else’s entry', async () => {
     const owner = await createTestUser('Credit Owner')
     const curator = await createTestUser('Credit Curator')
