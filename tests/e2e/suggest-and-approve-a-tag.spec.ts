@@ -33,6 +33,14 @@ test.describe('suggesting and approving a tag', () => {
     const chip = cardFor(page).locator('.tag.suggested', { hasText: tagName })
     await expect(chip).toBeVisible()
 
+    // Clicked straight away, the brand-new tag still narrows the feed rather
+    // than being called unknown.
+    await chip.getByRole('link', { name: tagName }).click()
+    await expect(
+      page.getByRole('button', { name: `Remove tag ${tagName} from the search` }),
+    ).toBeVisible()
+    await expect(cardFor(page)).toBeVisible()
+
     // Only suggested so far, so the entry is still a bounty.
     await page.getByRole('link', { name: 'Curation Bounties' }).click()
     await expect(cardFor(page)).toBeVisible()
@@ -53,7 +61,9 @@ test.describe('suggesting and approving a tag', () => {
     await page.getByRole('link', { name: 'Feed' }).click()
     await expect(cardFor(page).locator('.tag.approved', { hasText: tagName })).toBeVisible()
     await cardFor(page).getByRole('link', { name: tagName }).click()
-    await expect(page.getByRole('heading', { name: `Tagged ${tagName}` })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: `Remove tag ${tagName} from the search` }),
+    ).toBeVisible()
     await expect(cardFor(page)).toBeVisible()
   })
 

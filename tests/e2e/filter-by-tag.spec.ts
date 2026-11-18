@@ -47,8 +47,9 @@ test.describe('filtering the library by tag', () => {
       .click()
 
     await expect(page).toHaveURL(/\?tag=video$/)
+    // The tag lands in the search box, where it can be taken back out.
     await expect(
-      page.getByRole('heading', { name: 'Tagged Video' }),
+      page.getByRole('button', { name: 'Remove tag Video from the search' }),
     ).toBeVisible()
     await expect(page.getByText(tagged)).toBeVisible()
     await expect(page.getByText(untagged)).toHaveCount(0)
@@ -59,7 +60,7 @@ test.describe('filtering the library by tag', () => {
       cardFor(page, tagged).getByRole('link', { name: 'Video', exact: true }),
     ).toBeVisible()
 
-    await page.getByRole('link', { name: 'Show everything' }).click()
+    await page.getByRole('button', { name: 'Clear' }).click()
     await expect(page).toHaveURL(/\/$/)
     await expect(page.getByText(untagged)).toBeVisible()
 
@@ -93,7 +94,7 @@ test.describe('filtering the library by tag', () => {
     await page.goto('/?tag=video')
 
     await expect(
-      page.getByRole('heading', { name: 'Tagged Video' }),
+      page.getByRole('button', { name: 'Remove tag Video from the search' }),
     ).toBeVisible()
     await expect(page.getByText(tagged)).toBeVisible()
     await expect(page.getByText(untagged)).toHaveCount(0)

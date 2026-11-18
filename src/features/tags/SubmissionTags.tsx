@@ -9,13 +9,13 @@ import { Link } from 'react-router-dom'
 import {
   TAG_TYPES,
   fetchTags,
-  tagSlug,
   tagSubmission,
   tagTypeLabel,
   untagSubmission,
   type Tag,
 } from './api'
 import { MEDIUM_ICONS } from './mediumIcons'
+import { useTagHref } from './useTagHref'
 import './tags.css'
 
 type Choice = { key: string; name: string; type?: string; tag?: Tag }
@@ -217,6 +217,7 @@ export function SubmissionTags({
   onChange: (tags: Tag[]) => void
 }) {
   const [open, setOpen] = useState(false)
+  const tagHref = useTagHref()
   const [expanded, setExpanded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -271,7 +272,7 @@ export function SubmissionTags({
     >
       <Link
         className="tag-name"
-        to={`/?tag=${tagSlug(tag.name)}`}
+        to={tagHref(tag.name)}
         title={`Show everything tagged ${tag.name}`}
       >
         {tag.name}
@@ -287,7 +288,7 @@ export function SubmissionTags({
       <span key={tag.id} className={`tag medium ${tag.status}`}>
         <Link
           className="tag-name"
-          to={`/?tag=${tagSlug(tag.name)}`}
+          to={tagHref(tag.name)}
           aria-label={icon ? tag.name : undefined}
           title={`${tag.name}${note}: show everything in this medium`}
         >

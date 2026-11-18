@@ -1,0 +1,73 @@
+/* The feed's search box. Picked tags sit inside it as chips, ahead of the
+   typing; the chips themselves borrow the tags feature's look. */
+.feed-search {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.feed-search-box {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+/* The whole box lights up, not just the typing area inside it. */
+.feed-search-box:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.feed-search-box input:focus-visible {
+  outline: none;
+}
+
+.feed-search-box input {
+  flex: 1;
+  min-width: 12em;
+  padding: 4px 2px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.feed-search-tags {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.feed-search-tags li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.feed-search-tags li[aria-selected='true'] {
+  background: var(--surface);
+  color: var(--text);
+}
