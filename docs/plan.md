@@ -18,6 +18,11 @@ The only place work is tracked. Finished lines get deleted, not ticked.
   someone else posted). An author's name on an entry links to their
   profile, which lists everything they are credited on.
 - **Everyone signed in is an admin for now.** Roles come later.
+- **Capabilities (2026-11-18).** Admin powers are named capabilities
+  ("Can delete entries", later "Can approve tags", "Can approve
+  profiles"…), granted per account. Rules check the capability, never the
+  person. Roles bundle them later. First one: deleting entries, held by
+  Robert only.
 - **All ContentTagger entries come across with their tags intact.** The
   two tag lists are lined up first, then merged.
 
@@ -37,6 +42,8 @@ Nothing queued.
   Host), curation flags (Possibly outdated, Wrong info, Deprecated),
   the "Recent curation" history, the "5 of 7 complete" / "Still needed"
   checklist, and replies under comments.
+- From "Delete entry": no undo or trash bin, no record of who deleted
+  what, and no screen for granting capabilities (done in the database).
 - From "Regenerate thumbnail": it always draws a plain title card (a real
   picture the link had is lost), doesn't revisit the link, and has no undo.
 

@@ -177,6 +177,20 @@ Provider: Supabase Auth (bundles both providers + Postgres in one service). Auth
 
 Revisit if: users ask for password-based sign-in (additive, not a redesign — Supabase treats it as a separate provider against the same accounts).
 
+## Capabilities
+
+Named things an account is allowed to do, granted one account at a time (migration 18). Permission rules ask `has_capability('<name>')`, never who someone is. Roles, which would be bundles of capabilities, are not built yet. They can be added later without changing any rule.
+
+### capabilities
+`name` (e.g. `delete_entries`), `description`. Readable by anyone.
+
+### capability_grants
+`user_id` (the account, not the profile, because a profile may have no login), `capability`, `granted_at`. Accounts can see only their own grants. Nobody can grant through the site: grants are made directly in the database.
+
+| Capability | Lets an account | Held by |
+|---|---|---|
+| `delete_entries` | delete any entry, with its tags, credits, votes and comments | Robert Fedoruk |
+
 ## Moderation
 
 Manual at launch; communal moderation is the long-term goal, not built yet. New-user submissions and claims both route through the same manual review queue — don't build separate systems per entity type. Submission friction alone (e.g. requiring an account) is *not* sufficient anti-spam — a review queue and/or rate limits for new accounts are the intended real hedges, not yet built.

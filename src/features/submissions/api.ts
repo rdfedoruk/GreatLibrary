@@ -162,6 +162,26 @@ export async function removeAttribution(
   if (error) throw new Error(error.message)
 }
 
+// Deletes an entry for good, with its tags, credits, votes and comments (the
+// database removes those along with it). Only accounts holding the
+// delete_entries capability may; for anyone else the database deletes
+// nothing, which is reported as an error. The thumbnail image goes after,
+// once no entry uses it — if that part fails, the entry is still gone.
+export async function deleteSubmission(submissionId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from('submissions')
+    .delete()
+    .eq('id', submissionId)
+    .select('thumbnail_path')
+
+  if (error) throw new Error(error.message)
+  if (!data || data.length === 0) {
+    throw new Error('You don’t have permission to delete entries.')
+  }
+  const image = data[0].thumbnail_path
+  if (image) await supabase.storage.from('thumbnails').remove([image])
+}
+
 const SELECT = `id, url, title, description, thumbnail_path, source_site, created_at,
    submitter:profiles!submissions_submitted_by_fkey ( id, display_name, slug ),
    submission_attributions ( profiles ( id, display_name, slug, status, type ) ),

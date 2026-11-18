@@ -39,6 +39,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      capabilities: {
+        Row: {
+          description: string
+          name: string
+        }
+        Insert: {
+          description: string
+          name: string
+        }
+        Update: {
+          description?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      capability_grants: {
+        Row: {
+          capability: string
+          granted_at: string
+          user_id: string
+        }
+        Insert: {
+          capability: string
+          granted_at?: string
+          user_id: string
+        }
+        Update: {
+          capability?: string
+          granted_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capability_grants_capability_fkey"
+            columns: ["capability"]
+            isOneToOne: false
+            referencedRelation: "capabilities"
+            referencedColumns: ["name"]
+          },
+        ]
+      }
       claims: {
         Row: {
           created_at: string
@@ -476,6 +517,7 @@ export type Database = {
       }
       delete_suggested_profile: { Args: { p_id: string }; Returns: undefined }
       generate_profile_slug: { Args: { name: string }; Returns: string }
+      has_capability: { Args: { wanted: string }; Returns: boolean }
       merge_profile: {
         Args: { p_from: string; p_into: string }
         Returns: undefined
@@ -489,7 +531,10 @@ export type Database = {
         Returns: undefined
       }
       set_suggested_profile_type: {
-        Args: { p_id: string; p_type: Database["public"]["Enums"]["profile_type"] }
+        Args: {
+          p_id: string
+          p_type: Database["public"]["Enums"]["profile_type"]
+        }
         Returns: undefined
       }
       slugify: { Args: { input: string }; Returns: string }

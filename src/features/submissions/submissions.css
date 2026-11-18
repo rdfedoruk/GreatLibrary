@@ -636,3 +636,8 @@
   font-size: 12px;
   font-weight: 600;
 }
+
+.entry-delete {
+  margin-left: auto;
+  color: var(--danger);
+}

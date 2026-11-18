@@ -1,10 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useCapability } from '../capabilities'
 import { CommentThread } from '../comments'
 import { TagSections } from '../tags'
 import { VoteControl } from '../votes'
 import { CreditsSection } from './CreditsSection'
 import {
+  deleteSubmission,
   fetchSubmission,
   regenerateThumbnail,
   retitleSubmission,
@@ -116,6 +118,26 @@ function EntryHeader({
   const [draft, setDraft] = useState(item.title)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const canDelete = useCapability('delete_entries', currentUserId)
+  const [deleting, setDeleting] = useState(false)
+
+  const remove = () => {
+    if (
+      !window.confirm(
+        `Delete “${item.title}” for good? Its tags, credits, votes and comments go too. This can’t be undone.`,
+      )
+    )
+      return
+    setDeleting(true)
+    setError(null)
+    deleteSubmission(item.id)
+      .then(() => navigate('/'))
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : String(err))
+        setDeleting(false)
+      })
+  }
 
   const [regenerating, setRegenerating] = useState(false)
 
@@ -261,6 +283,16 @@ function EntryHeader({
           >
             Open original ↗
           </a>
+          {canDelete && (
+            <button
+              type="button"
+              className="quiet entry-delete"
+              disabled={deleting}
+              onClick={remove}
+            >
+              {deleting ? 'Deleting…' : 'Delete entry'}
+            </button>
+          )}
         </div>
       </div>
     </article>
