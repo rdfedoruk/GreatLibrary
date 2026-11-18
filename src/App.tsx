@@ -151,6 +151,7 @@ function Home({
         refreshKey={refreshKey}
         filter={{ taggedWith: picked.map((t) => t.id), text }}
         emptyMessage={searching ? 'Nothing matches that search.' : undefined}
+        grid
       />
     )
   }
@@ -184,8 +185,10 @@ function App() {
     if (pathname !== '/') setSubmitOpen(false)
   }, [pathname])
 
+  // The feed spreads across the screen; every other page stays narrow,
+  // because long lines of text are hard to read.
   return (
-    <main className="shell">
+    <main className={`shell${pathname === '/' ? ' shell-wide' : ''}`}>
       <header className="masthead">
         <div>
           <h1>

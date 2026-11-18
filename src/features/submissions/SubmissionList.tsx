@@ -15,11 +15,15 @@ export function SubmissionList({
   refreshKey = 0,
   filter,
   emptyMessage = 'The shelves are empty — the first submission will land here.',
+  grid = false,
 }: {
   currentUserId?: string | null
   refreshKey?: number
   filter?: SubmissionFilter
   emptyMessage?: string
+  // Tiles side by side across the screen (the main feed) rather than one
+  // entry per row.
+  grid?: boolean
 }) {
   const [items, setItems] = useState<SubmissionListItem[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -115,7 +119,9 @@ export function SubmissionList({
   }
   return (
     <>
-      <section className="submission-list" aria-label="Submissions">
+      <section
+        className={`submission-list${grid ? ' grid' : ''}`}
+        aria-label="Submissions">
         {items.map((item) => (
           <SubmissionCard
             key={item.id}
