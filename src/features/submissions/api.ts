@@ -234,14 +234,24 @@ export async function fetchSubmission(
 // Net score is summed client-side from the embedded vote rows, and the
 // current user's own vote is picked out of the same rows. Fine at current
 // scale; switch to a DB view/aggregate if lists get long or hot.
+//
+// `page` asks for one slice of the newest-first list (the feed loads more as
+// you scroll); without it, everything comes back. The id breaks ties between
+// entries made in the same instant, so no entry falls between two slices.
 export async function fetchSubmissions(
   currentUserId: string | null,
   filter: SubmissionFilter = {},
+  page?: { offset: number; limit: number },
 ): Promise<SubmissionListItem[]> {
   let query = supabase
     .from('submissions')
     .select(SELECT)
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+
+  if (page) {
+    query = query.range(page.offset, page.offset + page.limit - 1)
+  }
 
   if (filter.submittedBy) {
     query = query.eq('submitted_by', filter.submittedBy)
