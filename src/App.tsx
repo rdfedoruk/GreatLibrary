@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   BrowserRouter,
   Link,
@@ -20,7 +20,8 @@ import {
   SubmitForm,
 } from './features/submissions'
 import { ProfilePage } from './features/profiles'
-import { fetchTags, tagSlug, type Tag } from './features/tags'
+import { fetchTags, tagSlug, type Tag, type TagWithUses } from './features/tags'
+import { FeedSearch } from './features/search'
 import { PrivacyPage } from './features/privacy'
 
 function EmailSignIn() {
@@ -69,23 +70,32 @@ function Home({
   onCloseSubmit: () => void
 }) {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [tags, setTags] = useState<Tag[] | null>(null)
+  const [tags, setTags] = useState<TagWithUses[] | null>(null)
   const [tagsError, setTagsError] = useState<string | null>(null)
 
-  // The tag being filtered on lives in the address, so a filtered view can be
-  // shared and the back button undoes it. Nothing on the home page offers a
-  // tag — you get here by clicking one on a card.
-  const tagParam = searchParams.get('tag')
-  const filtering = tagParam !== null && tagParam !== ''
+  // The search lives in the address — `?tag=itsm&tag=video&q=projectile` —
+  // so a search can be shared and the back button undoes it.
+  const tagSlugs = searchParams.getAll('tag').filter(Boolean)
+  const text = searchParams.get('q') ?? ''
+  const searching = tagSlugs.length > 0 || text.trim() !== ''
 
-  // Only needed to turn the name in the address back into a tag, so it's
-  // fetched only when something is being filtered.
+  // The tags are needed both for the search box's suggestions and to turn
+  // the names in the address back into tags. They're fetched again when the
+  // address names one not in the list — a tag suggested on a card a moment
+  // ago and clicked straight away — and only then called unknown.
+  const tagKey = tagSlugs.join()
+  const [loadedFor, setLoadedFor] = useState<string | null>(null)
+  const known = (slug: string) => tags?.some((t) => tagSlug(t.name) === slug) ?? false
+  const stale = tags === null || (loadedFor !== tagKey && !tagSlugs.every(known))
+
   useEffect(() => {
-    if (!filtering) return
+    if (!stale) return
     let cancelled = false
     fetchTags()
       .then((data) => {
-        if (!cancelled) setTags(data)
+        if (cancelled) return
+        setTags(data)
+        setLoadedFor(tagKey)
       })
       .catch((err: unknown) => {
         if (!cancelled) setTagsError(err instanceof Error ? err.message : String(err))
@@ -93,28 +103,45 @@ function Home({
     return () => {
       cancelled = true
     }
-  }, [filtering])
+  }, [stale, tagKey])
 
-  const activeTag = tags?.find((t) => tagSlug(t.name) === tagParam) ?? null
+  const picked = tagSlugs.flatMap(
+    (slug) => tags?.filter((t) => tagSlug(t.name) === slug) ?? [],
+  )
+  const unknown = stale ? [] : tagSlugs.filter((slug) => !known(slug))
 
-  // A new entry needn't carry the tag being filtered on, so drop the filter
+  // Typing replaces the current address rather than adding to the history,
+  // so the back button doesn't step back through every pause in typing.
+  // Adding or removing a tag is a step back can undo.
+  const changeSearch = useCallback(
+    (nextTags: Tag[], nextText: string) => {
+      const next = new URLSearchParams()
+      for (const t of nextTags) next.append('tag', tagSlug(t.name))
+      if (nextText.trim()) next.set('q', nextText)
+      const sameTags = next.getAll('tag').join() === searchParams.getAll('tag').join()
+      setSearchParams(next, { replace: sameTags })
+    },
+    [searchParams, setSearchParams],
+  )
+
+  // A new entry needn't match what's being searched for, so drop the search
   // rather than let the thing someone just submitted land out of sight.
   const handleSubmitted = () => {
-    if (filtering) setSearchParams({}, { replace: true })
+    if (searching) setSearchParams({}, { replace: true })
     onSubmitted()
   }
 
   let body
-  if (filtering && tagsError) {
+  if (tagSlugs.length > 0 && tagsError) {
     body = <p className="submission-status">Couldn’t load tags: {tagsError}</p>
-  } else if (filtering && tags === null) {
-    // Nothing is rendered until the tag resolves — showing the list first
-    // would flash the whole library on the way to a filtered view.
+  } else if (tagSlugs.length > 0 && stale) {
+    // Nothing is rendered until the tags resolve — showing the list first
+    // would flash the whole library on the way to a narrowed view.
     body = <p className="submission-status">Loading the library…</p>
-  } else if (filtering && activeTag === null) {
+  } else if (unknown.length > 0) {
     body = (
       <p className="submission-status">
-        Nothing here — there’s no tag called “{tagParam}”.
+        Nothing here — there’s no tag called “{unknown[0]}”.
       </p>
     )
   } else {
@@ -122,10 +149,8 @@ function Home({
       <SubmissionList
         currentUserId={session?.user.id ?? null}
         refreshKey={refreshKey}
-        filter={activeTag ? { taggedWith: activeTag.id } : undefined}
-        emptyMessage={
-          activeTag ? `Nothing tagged ${activeTag.name} yet.` : undefined
-        }
+        filter={{ taggedWith: picked.map((t) => t.id), text }}
+        emptyMessage={searching ? 'Nothing matches that search.' : undefined}
       />
     )
   }
@@ -135,14 +160,12 @@ function Home({
       {session && submitOpen && (
         <SubmitForm onSubmitted={handleSubmitted} onClose={onCloseSubmit} />
       )}
-      {filtering && (
-        // The only way out of a filtered feed — there's no chip bar to click
-        // "All" in any more.
-        <div className="feed-filter">
-          <h2>Tagged {activeTag?.name ?? tagParam}</h2>
-          <Link to="/">Show everything</Link>
-        </div>
-      )}
+      <FeedSearch
+        allTags={tags?.filter((t) => t.uses > 0) ?? []}
+        picked={picked}
+        text={text}
+        onChange={changeSearch}
+      />
       {body}
     </>
   )

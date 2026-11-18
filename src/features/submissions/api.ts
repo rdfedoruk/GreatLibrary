@@ -39,8 +39,22 @@ export interface SubmissionListItem {
 export interface SubmissionFilter {
   submittedBy?: string
   attributedTo?: string
-  /** A tag id. Narrows the list to submissions carrying that tag. */
-  taggedWith?: string
+  /** Tag ids. Narrows the list to submissions carrying every one of them. */
+  taggedWith?: string[]
+  /** Words typed in the search box. Each must appear in the title or description. */
+  text?: string
+}
+
+/**
+ * The words of a search, lower-cased. Characters that mean something to the
+ * database's filter syntax (or are wildcards) count as spaces, so a stray
+ * comma or bracket can't break the query.
+ */
+export function searchWords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/[\s%*,()"\\]+/)
+    .filter(Boolean)
 }
 
 export interface NewSubmission {
@@ -272,14 +286,25 @@ export async function fetchSubmissions(
     ids = rows.map((r) => r.submission_id)
   }
 
-  if (filter.taggedWith) {
+  // One lookup per tag. The matching ids go back to the database as a list,
+  // which is fine at hundreds of entries per tag; at many thousands this
+  // wants doing inside the database instead.
+  for (const tagId of filter.taggedWith ?? []) {
     const { data: rows, error: tagError } = await supabase
       .from('submission_tags')
       .select('submission_id')
-      .eq('tag_id', filter.taggedWith)
+      .eq('tag_id', tagId)
     if (tagError) throw new Error(tagError.message)
-    const tagged = rows.map((r) => r.submission_id)
-    ids = ids === null ? tagged : ids.filter((id) => tagged.includes(id))
+    const tagged = new Set(rows.map((r) => r.submission_id))
+    ids = ids === null ? [...tagged] : ids.filter((id) => tagged.has(id))
+  }
+
+  // Every word must appear somewhere in the title or the description. A
+  // plain "contains" check: no typo tolerance and no ranking, so results
+  // stay newest first.
+  for (const word of searchWords(filter.text ?? '')) {
+    const pattern = `"%${word}%"`
+    query = query.or(`title.ilike.${pattern},description.ilike.${pattern}`)
   }
 
   if (ids !== null) {

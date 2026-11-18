@@ -126,12 +126,14 @@ export async function seedProfile(displayName: string): Promise<string> {
 export async function seedSubmission(
   submittedBy: string,
   description: string,
+  title?: string,
 ): Promise<string> {
   const { data, error } = await admin
     .from('submissions')
     .insert({
       url: `https://example.com/${crypto.randomUUID()}`,
       description,
+      title,
       source_site: 'manual',
       submitted_by: submittedBy,
     })

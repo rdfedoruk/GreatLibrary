@@ -27,8 +27,10 @@ Nothing queued.
 
 ## Left out on purpose
 
-- ContentTagger's search box and filtering by several tags at once. The
-  feed still filters by one tag, by clicking its chip.
+- From search: searching links and author names, typo tolerance, and
+  ranking by relevance (results stay newest first). Search does a plain
+  "contains" check on titles and descriptions; past many thousands of
+  entries it will need a proper search index.
 - Fixing the public name of people who sign up by email link (it is
   their email address).
 - From the entry-page mockup, for later: roles on credits (Publisher,

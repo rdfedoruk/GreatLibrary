@@ -89,20 +89,6 @@
   background: var(--surface);
 }
 
-/* Says which tag the feed is narrowed to, and offers the only way back out. */
-.feed-filter {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 16px;
-}
-
-.feed-filter a {
-  font-size: 13px;
-}
-
 /* Buttons are amber by default; `quiet` is the outlined one for the action
    that isn't the main one. */
 .shell button {

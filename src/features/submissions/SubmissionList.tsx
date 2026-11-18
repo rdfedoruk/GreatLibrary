@@ -31,6 +31,9 @@ export function SubmissionList({
   // filter changed is dropped instead of tacked onto the wrong list.
   const generation = useRef(0)
 
+  // An array is a new object every render; its contents, joined, are not.
+  const tagKey = filter?.taggedWith?.join()
+
   // The first slice. Starts the list over whenever what it shows changes.
   useEffect(() => {
     const gen = ++generation.current
@@ -58,7 +61,8 @@ export function SubmissionList({
     refreshKey,
     filter?.submittedBy,
     filter?.attributedTo,
-    filter?.taggedWith,
+    tagKey,
+    filter?.text,
   ])
 
   // Each later slice, fetched when the bottom of the list comes within a
