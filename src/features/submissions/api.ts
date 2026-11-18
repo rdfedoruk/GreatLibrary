@@ -338,12 +338,20 @@ export async function fetchSubmissions(
     ids = ids === null ? [...tagged] : ids.filter((id) => tagged.has(id))
   }
 
-  // Every word must appear somewhere in the title or the description. A
-  // plain "contains" check: no typo tolerance and no ranking, so results
-  // stay newest first.
+  // Every word must appear somewhere in the title, the description, or the
+  // name of someone credited on the entry. A plain "contains" check: no typo
+  // tolerance and no ranking, so results stay newest first. Credits are a
+  // separate lookup per word, for the same reason as tags above.
   for (const word of searchWords(filter.text ?? '')) {
     const pattern = `"%${word}%"`
-    query = query.or(`title.ilike.${pattern},description.ilike.${pattern}`)
+    const { data: rows, error: creditError } = await supabase
+      .from('submission_attributions')
+      .select('submission_id, profiles!inner(display_name)')
+      .ilike('profiles.display_name', `%${word}%`)
+    if (creditError) throw new Error(creditError.message)
+    const credited = [...new Set(rows.map((r) => r.submission_id))]
+    const byCredit = credited.length ? `,id.in.(${credited.join(',')})` : ''
+    query = query.or(`title.ilike.${pattern},description.ilike.${pattern}${byCredit}`)
   }
 
   if (ids !== null) {

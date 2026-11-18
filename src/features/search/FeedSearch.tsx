@@ -10,7 +10,8 @@ const squash = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
 
 /**
  * The feed's search box: tags picked from the suggestions sit in the box as
- * chips, and whatever is typed is searched for in titles and descriptions.
+ * chips, and whatever is typed is searched for in titles, descriptions and the names
+ * of who is credited.
  * It holds nothing itself — the feed keeps both in the page address.
  */
 export function FeedSearch({
@@ -107,7 +108,7 @@ export function FeedSearch({
           type="text"
           value={draft}
           autoComplete="off"
-          placeholder={picked.length ? 'Search within these tags…' : 'Search titles and descriptions, or add a tag…'}
+          placeholder={picked.length ? 'Search within these tags…' : 'Search titles, descriptions and credits, or add a tag…'}
           aria-label="Search the library"
           aria-expanded={open && matches.length > 0}
           aria-controls="feed-search-tags"

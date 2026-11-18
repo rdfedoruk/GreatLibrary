@@ -165,6 +165,17 @@ export async function tagSubmission(
   if (linkError) throw linkError
 }
 
+/** Credits a profile as one of the people who made a submission. */
+export async function creditProfile(
+  submissionId: string,
+  profileId: string,
+): Promise<void> {
+  const { error } = await admin
+    .from('submission_attributions')
+    .insert({ submission_id: submissionId, profile_id: profileId })
+  if (error) throw error
+}
+
 /**
  * Registers a page the *app* created mid-journey (an unclaimed creator page,
  * say) so teardown takes it with everything else. Looked up by name because

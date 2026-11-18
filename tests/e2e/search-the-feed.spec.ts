@@ -1,9 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
-import { cleanUp, seedProfile, seedSubmission, tagSubmission } from './helpers'
+import { cleanUp, creditProfile, seedProfile, seedSubmission, tagSubmission } from './helpers'
 
 // Covers the feed's search box: tags added to the search narrow the feed to
 // entries carrying all of them, and typed words narrow it further to entries
-// with every word in the title or description.
+// with every word in the title, the description, or the name of someone
+// credited on it.
 //
 // Searching is what a signed-out visitor does, so nothing signs in and the
 // fixtures are seeded straight into the database. Every entry carries a stamp,
@@ -18,6 +19,8 @@ test.describe('searching the library', () => {
   const offWord = `A calm ITSM entry ${stamp}`
   // ITSM, with "projectile" only in the description.
   const inDescription = `Projectile mentioned only down here ${stamp}`
+  // Nothing about it says "Zephyrine" except who it's credited to.
+  const credited = `A quiet walkthrough ${stamp}`
 
   test.beforeAll(async () => {
     const submitter = await seedProfile(`Journey Searcher ${stamp}`)
@@ -30,6 +33,8 @@ test.describe('searching the library', () => {
     await tagSubmission(offWordId, 'ITSM')
     const descId = await seedSubmission(submitter, inDescription, `Fourth ${stamp}`)
     await tagSubmission(descId, 'ITSM')
+    const creditedId = await seedSubmission(submitter, `Fifth ${stamp}`, credited)
+    await creditProfile(creditedId, await seedProfile(`Ada Zephyrine ${stamp}`))
   })
 
   test.afterAll(cleanUp)
@@ -98,6 +103,20 @@ test.describe('searching the library', () => {
     await expect(page.getByText(hit)).toBeVisible()
     await expect(page.getByText(offTag)).toHaveCount(0)
     await expect(page.getByText(offWord)).toHaveCount(0)
+  })
+
+  test('words can match who an entry is credited to', async ({ page }) => {
+    await page.goto('/')
+    await box(page).fill(`zephyrine ${stamp}`)
+
+    await expect(page.getByText(credited)).toBeVisible()
+    await expect(page.getByText(hit)).toHaveCount(0)
+
+    // A word from the credit and a word from the title narrow together.
+    await box(page).fill(`zephyrine walkthrough ${stamp}`)
+    await expect(page.getByText(credited)).toBeVisible()
+    await box(page).fill(`zephyrine projectile ${stamp}`)
+    await expect(page.getByText('Nothing matches that search.')).toBeVisible()
   })
 
   test('a search with no matches says so', async ({ page }) => {
