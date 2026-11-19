@@ -71,6 +71,13 @@
   margin-bottom: 0;
 }
 
+/* Votes always get their own line on a tile, so they sit at the bottom
+   even when the tags are short enough to share a line with them. */
+.submission-list.grid .tag-actions {
+  flex-basis: 100%;
+  justify-content: flex-end;
+}
+
 .submission-list.grid .submission-thumb {
   width: 100%;
 }
