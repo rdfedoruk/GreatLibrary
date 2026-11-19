@@ -44,6 +44,9 @@ Nothing queued.
   checklist, and replies under comments.
 - From "Delete entry": no undo or trash bin, no record of who deleted
   what, and no screen for granting capabilities (done in the database).
+- From plain letters in titles: only titles worked out at submission are
+  cleaned. A title typed on the curation page and the thumbnail card keep
+  whatever letters they were given.
 - From "Regenerate thumbnail": it always draws a plain title card (a real
   picture the link had is lost), doesn't revisit the link, and has no undo.
 
