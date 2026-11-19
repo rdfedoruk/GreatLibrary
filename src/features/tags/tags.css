@@ -53,15 +53,20 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: auto;
+  flex: 1;
   padding-top: 4px;
 }
 
-/* Tags on the left, votes / comments / tag button on the right. */
+/* Tags on the left, votes / comments / tag button on the right. On a card
+   the tags sit under the title and the actions sink to the bottom, so
+   cards in a row line up their tags at the top and their votes at the
+   bottom. */
 .tag-bar {
+  flex: 1;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  align-content: space-between;
   justify-content: space-between;
   gap: 8px 12px;
 }
