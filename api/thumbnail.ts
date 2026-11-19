@@ -20,6 +20,7 @@ import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { RUBRIC, thumbnail } from './_thumbnail/rubric.js';
 import { renderCard } from './_thumbnail/card.js';
+import { plainLetters } from './_plain-letters.js';
 
 const BUCKET = 'thumbnails';
 const MIME: Record<string, string> = {
@@ -119,7 +120,7 @@ async function submit(req: IncomingMessage, body: Record<string, unknown>) {
     .from('submissions')
     .insert({
       url,
-      title: result.title,
+      title: plainLetters(result.title),
       description,
       source_site: 'manual',
       submitted_by: user.id,
