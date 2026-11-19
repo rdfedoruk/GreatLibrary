@@ -196,7 +196,7 @@ function App() {
               The Great Library
             </Link>
           </h1>
-          <p className="tagline">A curated home for ServiceNow content.</p>
+          <p className="tagline">For those seeking trustworthy ServiceNow content</p>
         </div>
         <div className="account">
           {loading ? null : session ? (
