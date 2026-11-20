@@ -21,7 +21,7 @@ test.describe('suggesting and approving a tag', () => {
   test('a suggested tag keeps its entry in bounties until it is approved', async ({
     page,
   }) => {
-    const member = await signIn(page, 'Journey Tagger')
+    const member = await signIn(page)
     await seedSubmission(member.profileId, entry)
 
     // Suggest a tag nobody has used before, from the entry on the feed.
@@ -69,7 +69,7 @@ test.describe('suggesting and approving a tag', () => {
 
   test('taking a suggested tag off its only entry removes the tag', async ({ page }) => {
     const typo = `Journey Typo ${stamp}`
-    const member = await signIn(page, 'Journey Untagger')
+    const member = await signIn(page)
     const other = `An entry with a typo ${stamp}`
     await seedSubmission(member.profileId, other)
     const card = page.locator('.submission-card').filter({ hasText: other })

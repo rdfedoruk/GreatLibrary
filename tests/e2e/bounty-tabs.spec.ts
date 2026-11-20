@@ -32,7 +32,7 @@ test.describe('bounty tabs', () => {
     page.locator('.submission-card').filter({ hasText: text })
 
   test('a tagged entry stays on Untagged until you leave the tab', async ({ page }) => {
-    const member = await signIn(page, 'Bounty Tagger')
+    const member = await signIn(page)
     const entry = `Build an agent for HRSD ${stamp}`
     const id = await seedSubmission(member.profileId, entry)
     // A medium tag isn't a tag in this sense: the entry is still untagged.
@@ -63,7 +63,7 @@ test.describe('bounty tabs', () => {
   test('a credited entry stays on Unattributed until you leave the tab', async ({
     page,
   }) => {
-    const member = await signIn(page, 'Bounty Attributor')
+    const member = await signIn(page)
     const entry = `An entry nobody made ${stamp}`
     await seedSubmission(member.profileId, entry)
     const name = `Igni Bugnostroclumbasaur ${stamp}`
@@ -87,7 +87,7 @@ test.describe('bounty tabs', () => {
   })
 
   test('the old tags address opens the Tags tab', async ({ page }) => {
-    await signIn(page, 'Bounty Tag Manager')
+    await signIn(page)
     await page.goto('/tags')
     await expect(page).toHaveURL(/\/bounties#tags$/)
     await expect(page.getByRole('tab', { name: 'Tags', selected: true })).toBeVisible()

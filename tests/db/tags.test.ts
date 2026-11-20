@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   admin,
   anonClient,
-  createTestUser,
+  castMember,
   deleteTestUsers,
   seedSubmission,
   type TestUser,
@@ -38,8 +38,8 @@ describe('tags', () => {
   }
 
   beforeAll(async () => {
-    member = await createTestUser('Tagger')
-    stranger = await createTestUser('Stranger')
+    member = castMember('alice')
+    stranger = castMember('bob')
     submissionId = await seedSubmission(member.profileId)
 
     const { data, error } = await admin

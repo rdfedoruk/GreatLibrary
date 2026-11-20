@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { anonClient, createTestUser, deleteTestUsers, seedSubmission, type TestUser } from './helpers'
+import { anonClient, castMember, deleteTestUsers, seedSubmission, type TestUser } from './helpers'
 
 // Rules under test, from docs/current-state.md:
 //   "One vote per person per submission; value must be exactly +1 or −1."
@@ -9,7 +9,7 @@ describe('votes', () => {
   let submissionId: string
 
   beforeAll(async () => {
-    voter = await createTestUser('Voter')
+    voter = castMember('alice')
     submissionId = await seedSubmission(voter.profileId)
   })
 
@@ -43,7 +43,7 @@ describe('votes', () => {
   })
 
   it('refuses a vote cast in someone else‘s name', async () => {
-    const impostor = await createTestUser('Impostor')
+    const impostor = castMember('bob')
     const other = await seedSubmission(voter.profileId)
 
     const { error } = await impostor.client

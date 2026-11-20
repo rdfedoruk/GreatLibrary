@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { config } from 'dotenv'
+import { inject } from 'vitest'
+import type { CastName } from '../cast'
 
 config({ path: '.env.test', quiet: true })
 
@@ -22,6 +24,9 @@ if (url.includes(PRODUCTION_REF)) {
   throw new Error('Refusing to run: .env.test points at the production project.')
 }
 
+export const testUrl = url
+export const testPublishableKey = publishableKey
+
 /** Bypasses row-level security. Only ever used to arrange fixtures. */
 export const admin = createClient(url, secretKey, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -42,9 +47,33 @@ export type TestUser = {
 }
 
 const createdUserIds: string[] = []
+const castClients = new Map<CastName, TestUser>()
 
 /**
- * Makes a real signed-in member: an auth user (which the signup trigger gives
+ * One of the shared test accounts (see tests/cast.ts), already signed in for
+ * the whole run. Use this unless the test needs an account nobody else has
+ * touched: one that gets a capability, a verified identity, or is checked for
+ * what signing up gave it.
+ */
+export function castMember(name: CastName): TestUser {
+  const cached = castClients.get(name)
+  if (cached) return cached
+  const m = inject('cast')[name]
+  // Carries the session token on every request, so no sign-in happens here.
+  const client = createClient(url!, publishableKey!, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    global: { headers: { Authorization: `Bearer ${m.session.access_token}` } },
+  })
+  const member = { userId: m.userId, profileId: m.profileId, email: '', client }
+  castClients.set(name, member)
+  return member
+}
+
+/**
+ * Makes a brand-new signed-in member. Each one costs a sign-in, and the test
+ * project allows only about 30 every 5 minutes, so prefer castMember().
+ *
+ * A real signed-in member: an auth user (which the signup trigger gives
  * a profile) plus a client carrying that person's session, so every query it
  * makes is subject to the same rules a real member's browser would face.
  */

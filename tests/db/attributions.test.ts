@@ -2,7 +2,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 import {
   admin,
   anonClient,
-  createTestUser,
+  castMember,
   deleteTestUsers,
   seedEntity,
   seedSubmission,
@@ -17,7 +17,7 @@ describe('attribution', () => {
   afterAll(deleteTestUsers)
 
   it('lets a submitter credit a profile on their own submission', async () => {
-    const member = await createTestUser('Crediting Submitter')
+    const member = castMember('alice')
     const submissionId = await seedSubmission(member.profileId)
     const creatorId = await seedEntity('A Channel')
 
@@ -29,7 +29,7 @@ describe('attribution', () => {
   })
 
   it('refuses a credit from a signed-out visitor', async () => {
-    const member = await createTestUser('Quiet Submitter')
+    const member = castMember('alice')
     const submissionId = await seedSubmission(member.profileId)
     const creatorId = await seedEntity('Unwanted Credit')
 
@@ -41,7 +41,7 @@ describe('attribution', () => {
   })
 
   it('lets a submitter take a credit back off', async () => {
-    const owner = await createTestUser('Undoing Submitter')
+    const owner = castMember('alice')
     const submissionId = await seedSubmission(owner.profileId)
     const creatorId = await seedEntity('Mistaken Credit')
 
@@ -64,7 +64,7 @@ describe('attribution', () => {
   })
 
   it('refuses the same profile credited twice on one submission', async () => {
-    const member = await createTestUser('Double Crediter')
+    const member = castMember('alice')
     const submissionId = await seedSubmission(member.profileId)
     const creatorId = await seedEntity('Credited Once')
 
@@ -84,7 +84,7 @@ describe('creating pages for people who have not signed in', () => {
   afterAll(deleteTestUsers)
 
   it('lets a member create an unclaimed person page with a generated slug', async () => {
-    const member = await createTestUser('Page Creator')
+    const member = castMember('alice')
     const name = `Chuck Tomasi ${crypto.randomUUID().slice(0, 8)}`
 
     const { data, error } = await member.client.rpc('create_unclaimed_profile', {
@@ -99,7 +99,7 @@ describe('creating pages for people who have not signed in', () => {
   })
 
   it('gives a second page with the same name a different slug', async () => {
-    const member = await createTestUser('Duplicate Namer')
+    const member = castMember('alice')
     const name = `Same Name ${crypto.randomUUID().slice(0, 8)}`
 
     const first = await member.client.rpc('create_unclaimed_profile', {
@@ -115,7 +115,7 @@ describe('creating pages for people who have not signed in', () => {
   })
 
   it('refuses a blank name', async () => {
-    const member = await createTestUser('Blank Namer')
+    const member = castMember('alice')
 
     const { error } = await member.client.rpc('create_unclaimed_profile', {
       p_display_name: '   ',
@@ -133,7 +133,7 @@ describe('creating pages for people who have not signed in', () => {
   })
 
   it('refuses a page that arrives already attached to a login', async () => {
-    const member = await createTestUser('Login Attacher')
+    const member = castMember('alice')
 
     // Straight at the table, since the function never sets these — the rule
     // has to hold on its own.
@@ -147,7 +147,7 @@ describe('creating pages for people who have not signed in', () => {
   })
 
   it('refuses a member creating an entity page', async () => {
-    const member = await createTestUser('Entity Creator')
+    const member = castMember('alice')
 
     const { error } = await member.client.from('profiles').insert({
       display_name: 'A Company',

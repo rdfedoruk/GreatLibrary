@@ -10,7 +10,7 @@ test.describe('crediting the creator of a submission', () => {
   test('the submitter can credit a new creator, and it shows up everywhere', async ({
     page,
   }) => {
-    const member = await signIn(page, 'Journey Submitter')
+    const member = await signIn(page)
     const submissionId = await seedSubmission(
       member.profileId,
       'A video worth watching',
@@ -47,7 +47,7 @@ test.describe('crediting the creator of a submission', () => {
   test('an existing page is offered rather than duplicated, and a credit can be undone', async ({
     page,
   }) => {
-    const member = await signIn(page, 'Journey Reviser')
+    const member = await signIn(page)
     const submissionId = await seedSubmission(
       member.profileId,
       'An article worth reading',
@@ -84,7 +84,7 @@ test.describe('crediting the creator of a submission', () => {
   })
 
   test('nobody but the submitter is offered the editor', async ({ page }) => {
-    const owner = await signIn(page, 'Journey Owner')
+    const owner = await signIn(page)
     const submissionId = await seedSubmission(
       owner.profileId,
       'Someone else’s submission',
@@ -92,7 +92,7 @@ test.describe('crediting the creator of a submission', () => {
 
     // A different member, then a signed-out visitor: neither gets a way in.
     await signOut(page)
-    await signIn(page, 'Journey Passerby')
+    await signIn(page, 'bob')
     await page.goto(`/submission/${submissionId}`)
     await expect(page.getByRole('heading', { name: /^Discussion/ })).toBeVisible()
     await expect(page.getByRole('region', { name: 'Who made this' })).toHaveCount(0)

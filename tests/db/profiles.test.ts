@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest'
-import { admin, anonClient, createTestUser, deleteTestUsers, seedEntity } from './helpers'
+import { admin, anonClient, castMember,
+  createTestUser, deleteTestUsers, seedEntity } from './helpers'
 
 // Rules under test, from docs/current-state.md:
 //   "Entities can never log in (linked_user_id must stay empty for them)."
@@ -26,7 +27,7 @@ describe('profiles', () => {
   })
 
   it('refuses to give an entity a login', async () => {
-    const member = await createTestUser('Entity Wrangler')
+    const member = castMember('alice')
 
     // Even with fixture privileges that bypass the permission rules, the
     // constraint holds — this one is not a permission, it is impossible.
@@ -42,7 +43,7 @@ describe('profiles', () => {
   })
 
   it('refuses a claim on an entity page', async () => {
-    const member = await createTestUser('Hopeful Claimant')
+    const member = castMember('alice')
 
     const entityId = await seedEntity('A Company That Cannot Be Claimed')
 
@@ -56,7 +57,7 @@ describe('profiles', () => {
   })
 
   it('lets a member add an unverified identity but never a verified one', async () => {
-    const member = await createTestUser('Identity Adder')
+    const member = castMember('alice')
 
     const allowed = await member.client.from('profile_identities').insert({
       profile_id: member.profileId,
@@ -106,7 +107,11 @@ describe('profiles', () => {
   })
 
   it('refuses a signed-out visitor editing anyone‘s profile', async () => {
-    const member = await createTestUser('Target')
+    const member = castMember('alice')
+    const nameOf = async () =>
+      (await admin.from('profiles').select('display_name').eq('id', member.profileId).single())
+        .data?.display_name
+    const before = await nameOf()
 
     const { data } = await anonClient()
       .from('profiles')
@@ -118,11 +123,6 @@ describe('profiles', () => {
     // announcing it. Either way the name must be untouched.
     expect(data ?? []).toHaveLength(0)
 
-    const { data: after } = await admin
-      .from('profiles')
-      .select('display_name')
-      .eq('id', member.profileId)
-      .single()
-    expect(after?.display_name).toBe('Target')
+    expect(await nameOf()).toBe(before)
   })
 })

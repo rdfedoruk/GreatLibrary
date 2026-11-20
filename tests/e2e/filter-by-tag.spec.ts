@@ -116,7 +116,7 @@ test.describe('filtering the library by tag', () => {
   test('submitting while filtered leaves the new entry in sight', async ({
     page,
   }) => {
-    await signIn(page, `Journey Filter Submitter ${stamp}`)
+    await signIn(page)
     const url = `https://example.com/${crypto.randomUUID()}`
     // Nothing is at the link, so its title is just the site's name; the
     // credited name is what tells this entry apart.

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   admin,
   anonClient,
-  createTestUser,
+  castMember,
   deleteTestUsers,
   seedSubmission,
   type TestUser,
@@ -16,7 +16,7 @@ describe('submissions', () => {
   let member: TestUser
 
   beforeAll(async () => {
-    member = await createTestUser('Submitter')
+    member = castMember('alice')
   })
 
   afterAll(deleteTestUsers)
@@ -134,7 +134,7 @@ describe('submissions', () => {
       made.push(path)
       const id = await seedSubmission(member.profileId)
       await admin.from('submissions').update({ thumbnail_path: path }).eq('id', id)
-      const other = await createTestUser('Image Remover')
+      const other = castMember('bob')
 
       await other.client.storage.from('thumbnails').remove([path])
       const still = await fetch(
@@ -150,7 +150,7 @@ describe('submissions', () => {
         .from('thumbnails')
         .upload(path, png, { contentType: 'image/png' })
       made.push(path)
-      const other = await createTestUser('Unused Image Remover')
+      const other = castMember('bob')
 
       const { data } = await other.client.storage.from('thumbnails').remove([path])
       expect(data).toHaveLength(1)
@@ -169,7 +169,7 @@ describe('submissions', () => {
   })
 
   it('refuses a submission filed under someone else‘s name', async () => {
-    const other = await createTestUser('Someone Else')
+    const other = castMember('bob')
 
     const { error } = await member.client.from('submissions').insert({
       url: `https://example.com/${crypto.randomUUID()}`,

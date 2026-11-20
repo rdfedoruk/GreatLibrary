@@ -2,7 +2,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 import {
   admin,
   anonClient,
-  createTestUser,
+  castMember,
   deleteTestUsers,
   seedEntity,
   seedSubmission,
@@ -19,8 +19,8 @@ describe('open curation', () => {
       ?.title
 
   it('lets any signed-in account retitle someone else’s entry', async () => {
-    const owner = await createTestUser('Title Owner')
-    const curator = await createTestUser('Title Curator')
+    const owner = castMember('alice')
+    const curator = castMember('bob')
     const id = await seedSubmission(owner.profileId)
 
     const { error } = await curator.client
@@ -33,7 +33,7 @@ describe('open curation', () => {
   })
 
   it('refuses a signed-out visitor retitling', async () => {
-    const owner = await createTestUser('Guarded Owner')
+    const owner = castMember('alice')
     const id = await seedSubmission(owner.profileId)
     const before = await titleOf(id)
 
@@ -43,8 +43,8 @@ describe('open curation', () => {
   })
 
   it('refuses changing anything but the title', async () => {
-    const owner = await createTestUser('Fixed Link Owner')
-    const curator = await createTestUser('Link Changer')
+    const owner = castMember('alice')
+    const curator = castMember('bob')
     const id = await seedSubmission(owner.profileId)
 
     const { error } = await curator.client
@@ -56,8 +56,8 @@ describe('open curation', () => {
   })
 
   it('lets any signed-in account swap the thumbnail on someone else’s entry', async () => {
-    const owner = await createTestUser('Thumb Owner')
-    const curator = await createTestUser('Thumb Curator')
+    const owner = castMember('alice')
+    const curator = castMember('bob')
     const id = await seedSubmission(owner.profileId)
 
     const { error } = await curator.client
@@ -76,7 +76,7 @@ describe('open curation', () => {
   })
 
   it('refuses a signed-out visitor swapping the thumbnail', async () => {
-    const owner = await createTestUser('Thumb Guard')
+    const owner = castMember('alice')
     const id = await seedSubmission(owner.profileId)
 
     await anonClient().from('submissions').update({ thumbnail_path: 'x.png' }).eq('id', id)
@@ -86,8 +86,8 @@ describe('open curation', () => {
   })
 
   it('lets any signed-in account credit and uncredit on someone else’s entry', async () => {
-    const owner = await createTestUser('Credit Owner')
-    const curator = await createTestUser('Credit Curator')
+    const owner = castMember('alice')
+    const curator = castMember('bob')
     const id = await seedSubmission(owner.profileId)
     const creatorId = await seedEntity('Curated Channel')
 

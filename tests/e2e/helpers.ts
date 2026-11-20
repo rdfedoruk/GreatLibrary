@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { config } from 'dotenv'
+import type { Cast, CastName } from '../cast'
 
 config({ path: '.env.test', quiet: true })
 
@@ -25,6 +26,8 @@ if (url.includes(PRODUCTION_REF)) {
 }
 
 const projectRef = new URL(url).hostname.split('.')[0]
+export const testUrl = url
+export const testPublishableKey = publishableKey
 
 /** Bypasses row-level security. Only ever used to arrange and tear down. */
 export const admin = createClient(url, secretKey, {
@@ -46,7 +49,34 @@ const madeSubmissions: string[] = []
 const madeProfiles: string[] = []
 const madeUsers: string[] = []
 
+/** Writes a session into the slot supabase-js reads on startup. */
+async function storeSession(page: Page, session: unknown): Promise<void> {
+  // Runs before any page script, so the app boots already signed in rather
+  // than flashing the signed-out header first.
+  await page.addInitScript(
+    ([key, value]) => window.localStorage.setItem(key, value),
+    [`sb-${projectRef}-auth-token`, JSON.stringify(session)] as const,
+  )
+}
+
 /**
+ * Puts one of the shared test accounts (see tests/cast.ts) behind the
+ * browser. They are signed in once for the whole run, so this costs no
+ * sign-in. Use it unless the journey needs an account nobody else has
+ * touched, such as one granted a capability — then use signInFresh().
+ */
+export async function signIn(page: Page, who: CastName = 'alice'): Promise<SignedInMember> {
+  const raw = process.env.TEST_CAST
+  if (!raw) throw new Error('The shared test accounts are missing: run through playwright.config.ts')
+  const m = (JSON.parse(raw) as Cast)[who]
+  await storeSession(page, m.session)
+  return { userId: m.userId, profileId: m.profileId, displayName: m.displayName }
+}
+
+/**
+ * A brand-new member, signed in. Each one costs a sign-in, and the test
+ * project allows only about 30 every 5 minutes — prefer signIn().
+ *
  * Puts a real signed-in member behind the browser.
  *
  * The app only offers Google and email magic-link, neither of which a test can
@@ -55,7 +85,7 @@ const madeUsers: string[] = []
  * project, so a dev server accidentally pointed at production would reject it
  * rather than write anything there — the session itself is the failsafe.
  */
-export async function signIn(
+export async function signInFresh(
   page: Page,
   displayName = 'Journey Member',
 ): Promise<SignedInMember> {
@@ -86,12 +116,7 @@ export async function signIn(
   if (profileError) throw profileError
   madeProfiles.push(profile.id)
 
-  // Runs before any page script, so the app boots already signed in rather
-  // than flashing the signed-out header first.
-  await page.addInitScript(
-    ([key, value]) => window.localStorage.setItem(key, value),
-    [`sb-${projectRef}-auth-token`, JSON.stringify(signedIn.session)] as const,
-  )
+  await storeSession(page, signedIn.session)
 
   return { userId: created.user.id, profileId: profile.id, displayName }
 }

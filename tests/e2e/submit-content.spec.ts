@@ -17,7 +17,7 @@ test.describe('submitting content', () => {
   test.afterAll(cleanUp)
 
   test('a link goes in with its credits and tags', async ({ page }) => {
-    await signIn(page, 'Form Submitter')
+    await signIn(page)
     const known = unique('Known Creator')
     await seedProfile(known)
     const newcomer = unique('Newcomer Creator')
@@ -67,7 +67,7 @@ test.describe('submitting content', () => {
   })
 
   test('cancelling leaves no new profile behind', async ({ page }) => {
-    await signIn(page, 'Form Canceller')
+    await signIn(page)
     const name = unique('Never Saved')
 
     await page.goto('/')
@@ -82,7 +82,7 @@ test.describe('submitting content', () => {
 
   // The button sits in the main nav; the form opens on the feed.
   test('the nav button opens the form on the feed from another page', async ({ page }) => {
-    await signIn(page, 'Nav Submitter')
+    await signIn(page)
     await page.goto('/bounties')
     await page.getByRole('navigation', { name: 'Main' })
       .getByRole('button', { name: 'Submit content' }).click()
@@ -93,7 +93,7 @@ test.describe('submitting content', () => {
   })
 
   test('Feed, or the button again, closes the form', async ({ page }) => {
-    await signIn(page, 'Nav Closer')
+    await signIn(page)
     await page.goto('/')
     const nav = page.getByRole('navigation', { name: 'Main' })
     const button = nav.getByRole('button', { name: 'Submit content' })
