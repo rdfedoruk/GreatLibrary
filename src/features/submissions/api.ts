@@ -28,6 +28,10 @@ export interface SubmissionListItem {
   thumbnailUrl: string | null
   source_site: SourceSite
   created_at: string
+  /** When the content itself was published ("2024-10-26"); null when the source doesn't say. */
+  published_on: string | null
+  /** When the source says it was last updated, if that differs from published (GitHub's last push). */
+  updated_on: string | null
   submitter: ProfileRef
   creators: ProfileRef[]
   tags: SubmissionTag[]
@@ -183,6 +187,7 @@ export async function deleteSubmission(submissionId: string): Promise<void> {
 }
 
 const SELECT = `id, url, title, description, thumbnail_path, source_site, created_at,
+   published_on, updated_on,
    submitter:profiles!submissions_submitted_by_fkey ( id, display_name, slug ),
    submission_attributions ( profiles ( id, display_name, slug, status, type ) ),
    submission_tags ( tags ( id, name, status, type ) ),
@@ -197,6 +202,8 @@ type SubmissionRow = {
   thumbnail_path: string | null
   source_site: SourceSite
   created_at: string
+  published_on: string | null
+  updated_on: string | null
   submitter: { id: string; display_name: string; slug: string }
   submission_attributions: {
     profiles: {
@@ -234,6 +241,8 @@ function toItem(
       : null,
     source_site: row.source_site,
     created_at: row.created_at,
+    published_on: row.published_on,
+    updated_on: row.updated_on,
     submitter: {
       id: row.submitter.id,
       name: row.submitter.display_name,

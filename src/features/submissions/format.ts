@@ -26,10 +26,18 @@ export function ago(iso: string): string {
   return 'just now'
 }
 
-/** "Nov 17, 2026", for a hover title next to ago(). */
-export const fullDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString(undefined, {
+/** ago() for a plain date ("2024-10-26"): "3 days ago", or "today". */
+export function dayAgo(day: string): string {
+  const seconds = (Date.now() - new Date(day).getTime()) / 1000
+  return seconds < 24 * 3600 ? 'today' : ago(day)
+}
+
+/** "Oct 26, 2024" for a plain date. Read as UTC so no timezone moves it a day. */
+export const fullDay = (day: string): string =>
+  new Date(day).toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   })
+
