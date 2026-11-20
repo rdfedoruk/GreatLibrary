@@ -3,7 +3,7 @@
 // an image — neither of which a visitor's browser can do.
 //
 //   POST /api/thumbnail   { url, description? }   (signed in)
-//     → works out the title and thumbnail, stores the image, creates the
+//     → works out the title, thumbnail and published date, stores the image, creates the
 //       entry, and answers { id }.
 //   POST /api/thumbnail   { regenerate: id }      (signed in)
 //     → draws a fresh card from the entry's current title (for when the link
@@ -21,6 +21,7 @@ import { createClient } from '@supabase/supabase-js';
 import { RUBRIC, thumbnail } from './_thumbnail/rubric.js';
 import { renderCard } from './_thumbnail/card.js';
 import { plainLetters } from './_plain-letters.js';
+import { findDates } from './_published.js';
 
 const BUCKET = 'thumbnails';
 const MIME: Record<string, string> = {
@@ -107,7 +108,8 @@ async function submit(req: IncomingMessage, body: Record<string, unknown>) {
   if (existing.error) throw new Error(existing.error.message);
   if (existing.data) throw new UserError(409, 'That link is already in the library.');
 
-  const result = await thumbnail(url);
+  // The dates come from their own visit to the link, alongside the thumbnail's.
+  const [result, dates] = await Promise.all([thumbnail(url), findDates(url)]);
 
   const path = `${randomUUID()}.${result.ext}`;
   const upload = await supabase.storage.from(BUCKET).upload(path, result.image, {
@@ -128,6 +130,8 @@ async function submit(req: IncomingMessage, body: Record<string, unknown>) {
       thumbnail_strategy: result.strategy,
       thumbnail_rubric: RUBRIC,
       thumbnail_notes: result.notes,
+      published_on: dates.published,
+      updated_on: dates.updated,
     })
     .select('id')
     .single();

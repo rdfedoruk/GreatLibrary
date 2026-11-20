@@ -50,6 +50,10 @@ Nothing queued.
 - From "Regenerate thumbnail": it always draws a plain title card (a real
   picture the link had is lost), doesn't revisit the link, and has no undo.
 
+- From published dates: nobody can fix a wrong or missing date by hand,
+  the feed is still ordered by when entries were added (not published),
+  and an entry with no known date shows none.
+
 ## Loose ends
 
 - `docs/data-model.md` still describes claiming as a working plan.

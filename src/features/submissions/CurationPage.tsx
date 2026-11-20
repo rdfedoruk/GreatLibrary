@@ -14,7 +14,7 @@ import {
   type SubmissionListItem,
   type SubmissionTag,
 } from './api'
-import { ago, fullDate, hostOf } from './format'
+import { dayAgo, fullDay, hostOf } from './format'
 import './submissions.css'
 
 /**
@@ -258,10 +258,22 @@ function EntryHeader({
             </>
           )}
           {hostOf(item.url)}
-          {' · added '}
-          <time dateTime={item.created_at} title={fullDate(item.created_at)}>
-            {ago(item.created_at)}
-          </time>
+          {item.published_on && (
+            <>
+              {' · published '}
+              <time className="published-date" dateTime={item.published_on} title={fullDay(item.published_on)}>
+                {dayAgo(item.published_on)}
+              </time>
+            </>
+          )}
+          {item.updated_on && (
+            <>
+              {' · updated '}
+              <time className="updated-date" dateTime={item.updated_on} title={fullDay(item.updated_on)}>
+                {dayAgo(item.updated_on)}
+              </time>
+            </>
+          )}
         </p>
 
         {item.description && (

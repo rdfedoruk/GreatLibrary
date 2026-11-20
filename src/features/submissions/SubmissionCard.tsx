@@ -4,7 +4,7 @@ import { VoteControl } from '../votes'
 import { SubmissionTags } from '../tags'
 import { CreditsSection } from './CreditsSection'
 import type { ProfileRef, SubmissionListItem, SubmissionTag } from './api'
-import { ago, fullDate, hostOf } from './format'
+import { dayAgo, fullDay, hostOf } from './format'
 import './submissions.css'
 
 export function SubmissionCard({
@@ -78,10 +78,21 @@ export function SubmissionCard({
           )}
           {' · '}
           {hostOf(item.url)}
-          {' · '}
-          <time dateTime={item.created_at} title={fullDate(item.created_at)}>
-            {ago(item.created_at)}
-          </time>
+          {item.published_on && (
+            <>
+              {' · '}
+              <time
+                className="published-date"
+                dateTime={item.published_on}
+                title={
+                  `Published ${fullDay(item.published_on)}` +
+                  (item.updated_on ? `, updated ${fullDay(item.updated_on)}` : '')
+                }
+              >
+                {dayAgo(item.published_on)}
+              </time>
+            </>
+          )}
         </p>
         {item.description && (
           <p className="submission-description">{item.description}</p>
