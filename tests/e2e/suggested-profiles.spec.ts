@@ -34,7 +34,7 @@ test.describe('suggested profiles', () => {
   test.afterAll(cleanUp)
 
   test('a new name shows as a suggestion until it is approved', async ({ page }) => {
-    const member = await signIn(page, 'Profile Suggester')
+    const member = await signIn(page)
     const submissionId = await seedSubmission(member.profileId, 'A talk worth hearing')
     const name = unique('Brand New Creator')
 
@@ -57,7 +57,7 @@ test.describe('suggested profiles', () => {
   })
 
   test('a misspelt name can be merged into the real profile', async ({ page }) => {
-    const member = await signIn(page, 'Profile Merger')
+    const member = await signIn(page)
     const submissionId = await seedSubmission(member.profileId, 'A post worth reading')
     const realName = unique('Chuck Tomasi')
     await seedProfile(realName)
@@ -78,7 +78,7 @@ test.describe('suggested profiles', () => {
   })
 
   test('a misspelt suggestion can be renamed in place', async ({ page }) => {
-    const member = await signIn(page, 'Profile Renamer')
+    const member = await signIn(page)
     const submissionId = await seedSubmission(member.profileId, 'A demo worth seeing')
     const typo = unique('Jace Benson Typo')
     const fixed = typo.replace('Jace Benson Typo', 'Jace Benson')
@@ -97,7 +97,7 @@ test.describe('suggested profiles', () => {
   })
 
   test('a suggestion can be marked as an entity before it is approved', async ({ page }) => {
-    const member = await signIn(page, 'Entity Marker')
+    const member = await signIn(page)
     const submissionId = await seedSubmission(member.profileId, 'An episode worth hearing')
     const name = unique('Some Podcast')
 
@@ -119,7 +119,7 @@ test.describe('suggested profiles', () => {
   })
 
   test('a suggestion can be deleted, taking it off its entry', async ({ page }) => {
-    const member = await signIn(page, 'Profile Deleter')
+    const member = await signIn(page)
     const submissionId = await seedSubmission(member.profileId, 'A video of nothing much')
     const name = unique('Not A Real Person')
 

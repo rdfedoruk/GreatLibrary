@@ -10,5 +10,7 @@ export default defineConfig({
     // make failures hard to read. Correctness beats speed here.
     fileParallelism: false,
     testTimeout: 15000,
+    // Signs the shared test accounts in once for the whole run.
+    globalSetup: ['tests/db/global-setup.ts'],
   },
 })

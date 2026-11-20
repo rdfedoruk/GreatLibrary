@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest'
-import { admin, anonClient, createTestUser, deleteTestUsers, seedSubmission } from './helpers'
+import { admin, anonClient, castMember,
+  createTestUser, deleteTestUsers, seedSubmission } from './helpers'
 
 // Rules under test, from migration 18: only an account holding the
 // delete_entries capability can delete an entry, and its attachments go too.
@@ -18,7 +19,7 @@ describe('deleting entries', () => {
   }
 
   it('lets an account holding the capability delete someone else’s entry, comments and all', async () => {
-    const owner = await createTestUser('Delete Owner')
+    const owner = castMember('alice')
     const deleter = await createTestUser('Entry Deleter')
     await grant(deleter.userId)
     const id = await seedSubmission(owner.profileId)
@@ -35,7 +36,7 @@ describe('deleting entries', () => {
   })
 
   it('refuses an ordinary signed-in account, even the submitter', async () => {
-    const owner = await createTestUser('Plain Owner')
+    const owner = castMember('alice')
     const id = await seedSubmission(owner.profileId)
 
     await owner.client.from('submissions').delete().eq('id', id)
@@ -44,7 +45,7 @@ describe('deleting entries', () => {
   })
 
   it('refuses a signed-out visitor', async () => {
-    const owner = await createTestUser('Guarded Owner')
+    const owner = castMember('alice')
     const id = await seedSubmission(owner.profileId)
 
     await anonClient().from('submissions').delete().eq('id', id)
@@ -54,7 +55,7 @@ describe('deleting entries', () => {
 
   it('lets an account see its own capabilities but not anyone else’s', async () => {
     const holder = await createTestUser('Holder')
-    const other = await createTestUser('Other')
+    const other = castMember('bob')
     await grant(holder.userId)
 
     const mine = await holder.client.from('capability_grants').select('capability')
@@ -65,7 +66,7 @@ describe('deleting entries', () => {
   })
 
   it('refuses an account granting itself a capability', async () => {
-    const sneaky = await createTestUser('Sneaky')
+    const sneaky = castMember('bob')
 
     const { error } = await sneaky.client
       .from('capability_grants')

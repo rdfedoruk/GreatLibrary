@@ -10,7 +10,7 @@ test.describe('curating an entry', () => {
   test('is reached from the feed card, and the old discussion page is unchanged', async ({
     page,
   }) => {
-    const owner = await signIn(page, 'Feed Visitor')
+    const owner = await signIn(page)
     const entry = `An entry to find ${crypto.randomUUID().slice(0, 8)}`
     const submissionId = await seedSubmission(owner.profileId, entry)
 
@@ -30,12 +30,12 @@ test.describe('curating an entry', () => {
   })
 
   test('a member can credit a creator on someone else’s entry', async ({ page }) => {
-    const owner = await signIn(page, 'Credit Owner')
+    const owner = await signIn(page)
     const submissionId = await seedSubmission(owner.profileId, 'An entry to credit')
     const creatorName = `Curated Creator ${crypto.randomUUID().slice(0, 8)}`
 
     await signOut(page)
-    await signIn(page, 'Credit Curator')
+    await signIn(page, 'bob')
     await page.goto(`/submission/${submissionId}/curate`)
 
     const credits = page.getByRole('region', { name: 'People and organizations' })
@@ -52,12 +52,12 @@ test.describe('curating an entry', () => {
   })
 
   test('a member can retitle someone else’s entry', async ({ page }) => {
-    const owner = await signIn(page, 'Title Owner')
+    const owner = await signIn(page)
     const submissionId = await seedSubmission(owner.profileId, 'a badly typed titel')
     const better = `A properly typed title ${crypto.randomUUID().slice(0, 8)}`
 
     await signOut(page)
-    await signIn(page, 'Title Fixer')
+    await signIn(page, 'bob')
     await page.goto(`/submission/${submissionId}/curate`)
 
     await page.getByRole('button', { name: 'Edit title' }).click()
@@ -71,7 +71,7 @@ test.describe('curating an entry', () => {
   })
 
   test('each tag section only offers its own kind of tag', async ({ page }) => {
-    const member = await signIn(page, 'Section Tagger')
+    const member = await signIn(page)
     const submissionId = await seedSubmission(member.profileId, 'An entry to tag by section')
     const version = `Zurich ${crypto.randomUUID().slice(0, 6)}`
 
@@ -99,7 +99,7 @@ test.describe('curating an entry', () => {
   })
 
   test('a signed-out visitor sees the record but cannot edit it', async ({ page }) => {
-    const owner = await signIn(page, 'Record Owner')
+    const owner = await signIn(page)
     const submissionId = await seedSubmission(owner.profileId, 'A read-only look')
 
     await signOut(page)

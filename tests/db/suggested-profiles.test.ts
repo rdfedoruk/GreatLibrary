@@ -2,6 +2,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 import {
   admin,
   anonClient,
+  castMember,
   createTestUser,
   deleteTestUsers,
   seedEntity,
@@ -41,7 +42,7 @@ describe('suggested profiles', () => {
   afterAll(deleteTestUsers)
 
   it('makes a typed-in name a suggested profile', async () => {
-    const member = await createTestUser('Suggester')
+    const member = castMember('alice')
     const id = await suggest(member)
     expect(await statusOf(id)).toBe('suggested')
   })
@@ -52,7 +53,7 @@ describe('suggested profiles', () => {
   })
 
   it('refuses a member creating a profile that is already approved', async () => {
-    const member = await createTestUser('Self Approver')
+    const member = castMember('alice')
     const { error } = await member.client.from('profiles').insert({
       display_name: 'Pre-approved',
       slug: `pre-approved-${crypto.randomUUID()}`,
@@ -62,8 +63,8 @@ describe('suggested profiles', () => {
   })
 
   it('lets any signed-in account approve a suggestion, but not a visitor', async () => {
-    const suggester = await createTestUser('Suggester Two')
-    const approver = await createTestUser('Approver')
+    const suggester = castMember('alice')
+    const approver = castMember('bob')
     const id = await suggest(suggester)
 
     const refused = await anonClient().rpc('approve_profile', { p_id: id })
@@ -76,7 +77,7 @@ describe('suggested profiles', () => {
   })
 
   it('deletes a suggestion and its credits, but refuses to delete an approved profile', async () => {
-    const member = await createTestUser('Deleter')
+    const member = castMember('alice')
     const submissionId = await seedSubmission(member.profileId)
     const id = await suggest(member)
     await member.client
@@ -88,7 +89,7 @@ describe('suggested profiles', () => {
     expect(await statusOf(id)).toBeNull()
     expect(await creditsOf(id)).toHaveLength(0)
 
-    const other = await createTestUser('Not Deletable')
+    const other = castMember('bob')
     const refused = await member.client.rpc('delete_suggested_profile', {
       p_id: other.profileId,
     })
@@ -97,8 +98,8 @@ describe('suggested profiles', () => {
   })
 
   it('merges a suggestion into an approved profile, moving credits from anyone’s entries', async () => {
-    const submitter = await createTestUser('Credit Owner')
-    const merger = await createTestUser('Merger')
+    const submitter = castMember('alice')
+    const merger = castMember('bob')
     const first = await seedSubmission(submitter.profileId)
     const second = await seedSubmission(submitter.profileId)
     const into = await seedEntity('The Real Name')
@@ -122,7 +123,7 @@ describe('suggested profiles', () => {
   })
 
   it('merges a suggestion into the profile of someone who has since signed up', async () => {
-    const submitter = await createTestUser('Early Crediter')
+    const submitter = castMember('alice')
     const submissionId = await seedSubmission(submitter.profileId)
     const from = await suggest(submitter, unique('Late Joiner'))
     await submitter.client
@@ -139,7 +140,7 @@ describe('suggested profiles', () => {
   })
 
   it('refuses to merge an approved profile, into a suggestion, or into itself', async () => {
-    const member = await createTestUser('Bad Merger')
+    const member = castMember('alice')
     const approved = await seedEntity('Approved One')
     const suggestion = await suggest(member)
     const another = await suggest(member)
@@ -165,7 +166,7 @@ describe('suggested profiles', () => {
   })
 
   it('refuses a member un-approving their own profile', async () => {
-    const member = await createTestUser('Status Fiddler')
+    const member = castMember('alice')
     await member.client
       .from('profiles')
       .update({ status: 'suggested' })
@@ -174,7 +175,7 @@ describe('suggested profiles', () => {
   })
 
   it('deletes a suggestion once no entry credits it, but keeps an approved profile', async () => {
-    const member = await createTestUser('Typo Fixer')
+    const member = castMember('alice')
     const submissionId = await seedSubmission(member.profileId)
     const typo = await suggest(member)
     const real = await seedEntity('Kept Anyway')
@@ -192,8 +193,8 @@ describe('suggested profiles', () => {
   })
 
   it('lets any signed-in account rename a suggestion, moving its address with it', async () => {
-    const suggester = await createTestUser('Typo Maker')
-    const fixer = await createTestUser('Typo Fixer Two')
+    const suggester = castMember('alice')
+    const fixer = castMember('bob')
     const id = await suggest(suggester, unique('Chuk Tomasi'))
     const newName = unique('Chuck Tomasi')
 
@@ -208,7 +209,7 @@ describe('suggested profiles', () => {
   })
 
   it('keeps the address when only the capitals change', async () => {
-    const member = await createTestUser('Capitaliser')
+    const member = castMember('alice')
     const name = unique('lower case name')
     const id = await suggest(member, name)
     const before = await admin.from('profiles').select('slug').eq('id', id).single()
@@ -222,8 +223,8 @@ describe('suggested profiles', () => {
   })
 
   it('lets any signed-in account mark a suggestion as an entity, and back', async () => {
-    const suggester = await createTestUser('Entity Suggester')
-    const marker = await createTestUser('Entity Marker')
+    const suggester = castMember('alice')
+    const marker = castMember('bob')
     const id = await suggest(suggester, unique('Some Podcast'))
     const typeOf = async () =>
       (await admin.from('profiles').select('type').eq('id', id).single()).data?.type
@@ -247,7 +248,7 @@ describe('suggested profiles', () => {
   })
 
   it('refuses changing the type of an approved profile', async () => {
-    const member = await createTestUser('Type Changer')
+    const member = castMember('alice')
     const { error } = await member.client.rpc('set_suggested_profile_type', {
       p_id: member.profileId,
       p_type: 'entity',
@@ -258,8 +259,8 @@ describe('suggested profiles', () => {
   })
 
   it('refuses renaming an approved profile, a blank name, or a visitor renaming', async () => {
-    const member = await createTestUser('Renamer')
-    const other = await createTestUser('Approved Already')
+    const member = castMember('alice')
+    const other = castMember('bob')
     const id = await suggest(member)
 
     const approved = await member.client.rpc('rename_suggested_profile', {

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { anonClient, createTestUser, deleteTestUsers, seedSubmission, type TestUser } from './helpers'
+import { anonClient, castMember, deleteTestUsers, seedSubmission, type TestUser } from './helpers'
 
 // Rules under test, from the initial migration:
 //   comments are publicly readable; authenticated users can comment as
@@ -10,7 +10,7 @@ describe('comments', () => {
   let submissionId: string
 
   beforeAll(async () => {
-    author = await createTestUser('Commenter')
+    author = castMember('alice')
     submissionId = await seedSubmission(author.profileId)
   })
 
@@ -91,7 +91,7 @@ describe('comments', () => {
   })
 
   it('refuses a comment posted in someone else‘s name', async () => {
-    const impostor = await createTestUser('Impostor')
+    const impostor = castMember('bob')
 
     const { error } = await impostor.client
       .from('comments')
@@ -193,7 +193,7 @@ describe('comments', () => {
   })
 
   it('refuses an edit to someone else‘s comment', async () => {
-    const impostor = await createTestUser('Edit Impostor')
+    const impostor = castMember('bob')
     const { data: existing } = await author.client
       .from('comments')
       .select('id')
@@ -211,7 +211,7 @@ describe('comments', () => {
   })
 
   it('refuses a delete of someone else‘s comment', async () => {
-    const impostor = await createTestUser('Delete Impostor')
+    const impostor = castMember('bob')
     const { data: existing } = await author.client
       .from('comments')
       .select('id')

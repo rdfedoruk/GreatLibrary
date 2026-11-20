@@ -29,6 +29,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: 'list',
+  // Signs the shared test accounts in once for the whole run.
+  globalSetup: './tests/e2e/global-setup.ts',
   use: {
     baseURL: `http://localhost:${port}`,
     trace: 'on-first-retry',

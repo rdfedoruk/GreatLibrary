@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest'
-import { createTestUser, deleteTestUsers, seedSubmission } from './helpers'
+import { castMember, deleteTestUsers, seedSubmission } from './helpers'
 
 // Rule under test, from docs/current-state.md § Blocked in the database on
 // purpose: open takedowns have no insert rule at all, deliberately, until
@@ -10,7 +10,7 @@ describe('removal requests', () => {
   afterAll(deleteTestUsers)
 
   it('lets a claimed person file a verified self-removal', async () => {
-    const member = await createTestUser('Self Remover')
+    const member = castMember('alice')
     const submissionId = await seedSubmission(member.profileId)
 
     const { error } = await member.client.from('removal_requests').insert({
@@ -25,7 +25,7 @@ describe('removal requests', () => {
   })
 
   it('refuses an open takedown from anyone, by design', async () => {
-    const member = await createTestUser('Takedown Filer')
+    const member = castMember('alice')
     const submissionId = await seedSubmission(member.profileId)
 
     const { error } = await member.client.from('removal_requests').insert({

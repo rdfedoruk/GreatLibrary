@@ -14,14 +14,14 @@ test.describe('regenerating a thumbnail', () => {
   )
 
   test('replaces someone else’s thumbnail and deletes the old one', async ({ page }) => {
-    const owner = await signIn(page, 'Sign Up Owner')
+    const owner = await signIn(page)
     const id = await seedSubmission(owner.profileId, '', 'A fixed-up title')
     const oldPath = `test-${crypto.randomUUID()}.png`
     await admin.storage.from('thumbnails').upload(oldPath, png, { contentType: 'image/png' })
     await admin.from('submissions').update({ thumbnail_path: oldPath }).eq('id', id)
 
     await signOut(page)
-    await signIn(page, 'Thumbnail Fixer')
+    await signIn(page, 'bob')
     await page.goto(`/submission/${id}/curate`)
 
     const thumb = page.locator('.entry-thumb')
@@ -42,7 +42,7 @@ test.describe('regenerating a thumbnail', () => {
   })
 
   test('is not offered to a signed-out visitor', async ({ page }) => {
-    const owner = await signIn(page, 'Quiet Owner')
+    const owner = await signIn(page)
     const id = await seedSubmission(owner.profileId, 'No button here')
     await signOut(page)
     await page.goto(`/submission/${id}/curate`)
